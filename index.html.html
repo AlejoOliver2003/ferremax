@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FerreMax — Prospector de Clientes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --negro: #0F0F0F;
+  --acero: #1E2530;
+  --acero-medio: #2D3748;
+  --acero-claro: #4A5568;
+  --amarillo: #F5C842;
+  --amarillo-oscuro: #D4A017;
+  --blanco: #FAFAFA;
+  --gris: #A0AEC0;
+  --gris-claro: #EDF2F7;
+  --rojo-suave: #FC8181;
+  --verde-suave: #68D391;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--acero);
+  color: var(--blanco);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+  background: var(--negro);
+  border-bottom: 2px solid var(--amarillo);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--amarillo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border-radius: 3px;
+}
+
+.logo-texto {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-nombre {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--blanco);
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.logo-tag {
+  font-size: 10px;
+  color: var(--amarillo);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+
+.header-stats {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gris);
+  font-family: 'DM Mono', monospace;
+}
+
+.stat-num {
+  color: var(--amarillo);
+  font-weight: 500;
+}
+
+/* LAYOUT */
+.app {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+/* PANEL IZQUIERDO */
+.panel-izq {
+  width: 380px;
+  background: var(--negro);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--acero-medio);
+  flex-shrink: 0;
+}
+
+.search-zone {
+  padding: 20px;
+  border-bottom: 1px solid var(--acero-medio);
+}
+
+.search-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--blanco);
+  margin-bottom: 4px;
+}
+
+.search-sub {
+  font-size: 11px;
+  color: var(--gris);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.field-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amarillo);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 6px;
+}
+
+.search-input {
+  width: 100%;
+  background: var(--acero);
+  border: 1.5px solid var(--acero-medio);
+  border-radius: 4px;
+  padding: 10px 14px;
+  color: var(--blanco);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 12px;
+}
+.search-input::placeholder { color: var(--acero-claro); }
+.search-input:focus { border-color: var(--amarillo); }
+
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--acero-medio);
+  background: transparent;
+  color: var(--gris);
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.02em;
+}
+.chip.on {
+  background: var(--amarillo);
+  border-color: var(--amarillo);
+  color: var(--negro);
+}
+
+.btn-buscar {
+  width: 100%;
+  background: var(--amarillo);
+  color: var(--negro);
+  border: none;
+  border-radius: 4px;
+  padding: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-buscar:hover { background: var(--amarillo-oscuro); }
+.btn-buscar:disabled { background: var(--acero-claro); color: var(--gris); cursor: not-allowed; }
+
+/* LISTA */
+.lista-header {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--acero-medio);
+}
+
+.lista-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--gris);
+}
+
+.lista-count span { color: var(--amarillo); font-weight: 500; }
+
+.btn-exp {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--amarillo);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.lista {
+  flex: 1;
+  overflow-y: auto;
+}
+.lista::-webkit-scrollbar { width: 3px; }
+.lista::-webkit-scrollbar-thumb { background: var(--acero-medio); border-radius: 2px; }
+
+.item {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--acero-medio);
+  cursor: pointer;
+  transition: background 0.1s;
+  display: flex;
+  gap: 12px;
+}
+.item:hover { background: var(--acero); }
+.item.selected { background: var(--acero); border-left: 3px solid var(--amarillo); padding-left: 17px; }
+
+.item-tipo-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.badge-ferreteria { background: #2D3748; }
+.badge-mayorista { background: #2C3A1E; }
+.badge-distribuidor { background: #2A2020; }
+.badge-construccion { background: #2A2530; }
+
+.item-info { flex: 1; min-width: 0; }
+
+.item-nombre {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--blanco);
+  margin-bottom: 2px;
+}
+
+.item-dir {
+  font-size: 11px;
+  color: var(--gris);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-badges {
+  display: flex;
+  gap: 4px;
+}
+
+.ibadge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.ibadge-tipo { background: #2D374880; color: var(--amarillo); border: 1px solid var(--acero-medio); }
+.ibadge-nuevo { background: #22543D; color: var(--verde-suave); }
+.ibadge-contactado { background: #2D3748; color: var(--gris); }
+
+/* ZONA CENTRAL — MAPA / DETALLE */
+.zona-central {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+#mapa { width: 100%; height: 100%; }
+
+/* PANEL DERECHO — FICHA */
+.ficha {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 320px;
+  background: var(--negro);
+  border: 1px solid var(--acero-medio);
+  border-top: 3px solid var(--amarillo);
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: none;
+  flex-direction: column;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  z-index: 50;
+}
+.ficha.visible { display: flex; }
+.ficha::-webkit-scrollbar { width: 3px; }
+.ficha::-webkit-scrollbar-thumb { background: var(--acero-medio); }
+
+.ficha-top {
+  padding: 16px;
+  border-bottom: 1px solid var(--acero-medio);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ficha-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amarillo);
+  margin-bottom: 6px;
+}
+
+.ficha-nombre {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--blanco);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.ficha-tipo {
+  font-size: 11px;
+  color: var(--gris);
+}
+
+.ficha-close {
+  background: none;
+  border: none;
+  color: var(--gris);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  margin-left: 8px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.ficha-close:hover { color: var(--blanco); }
+
+.ficha-datos {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--acero-medio);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dato-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.dato-key {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-top: 1px;
+}
+.dato-val { color: var(--blanco); font-weight: 500; text-align: right; max-width: 60%; line-height: 1.4; }
+
+/* MENSAJERÍA */
+.ficha-msg {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--acero-medio);
+}
+
+.msg-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--amarillo);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 10px;
+}
+
+.msg-tipo-btns {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.msg-tipo-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--acero-medio);
+  background: transparent;
+  color: var(--gris);
+  font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  transition: all 0.15s;
+}
+.msg-tipo-btn.on {
+  background: var(--amarillo);
+  border-color: var(--amarillo);
+  color: var(--negro);
+}
+
+.msg-textarea {
+  width: 100%;
+  background: var(--acero);
+  border: 1.5px solid var(--acero-medio);
+  border-radius: 4px;
+  padding: 10px;
+  color: var(--blanco);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.msg-textarea:focus { border-color: var(--amarillo); }
+
+.btn-generar {
+  width: 100%;
+  background: transparent;
+  border: 1.5px solid var(--amarillo);
+  color: var(--amarillo);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-generar:hover { background: var(--amarillo); color: var(--negro); }
+.btn-generar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.msg-acciones {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-enviar {
+  flex: 1;
+  padding: 9px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  border: none;
+}
+
+.btn-wa { background: #25D366; color: white; }
+.btn-wa:hover { background: #1EB55A; }
+.btn-mail { background: var(--acero-medio); color: var(--blanco); }
+.btn-mail:hover { background: var(--acero-claro); }
+.btn-vendedor {
+  width: 100%;
+  background: var(--acero-medio);
+  color: var(--blanco);
+  border: none;
+  border-radius: 3px;
+  padding: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 0.15s;
+  margin-top: 6px;
+}
+.btn-vendedor:hover { background: var(--acero-claro); }
+
+/* ESTADO VACÍO */
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--gris);
+  text-align: center;
+  padding: 40px;
+}
+.estado-icono { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.estado-titulo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--blanco);
+  margin-bottom: 6px;
+  opacity: 0.6;
+}
+.estado-desc { font-size: 12px; line-height: 1.6; max-width: 240px; }
+
+/* SPINNER */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--acero-medio);
+  border-top-color: var(--amarillo);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MAPA OVERLAY INFO */
+.mapa-leyenda {
+  position: absolute;
+  bottom: 20px;
+  left: 16px;
+  background: rgba(15,15,15,0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--acero-medio);
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  gap: 14px;
+}
+
+.ley-item { display: flex; align-items: center; gap: 5px; color: var(--gris); }
+.ley-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── PANEL SEGUIMIENTO ── */
+.nav-tabs { display: flex; gap: 4px; align-items: center; }
+.nav-tab {
+  padding: 6px 14px; border-radius: 3px; font-size: 11px; font-weight: 700;
+  cursor: pointer; border: 1.5px solid var(--acero-medio); background: transparent;
+  color: var(--gris); font-family: 'DM Sans', sans-serif; letter-spacing: 0.06em;
+  text-transform: uppercase; transition: all 0.15s;
+}
+.nav-tab.active { background: var(--amarillo); border-color: var(--amarillo); color: var(--negro); }
+.nav-tab .bc {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--negro); color: var(--amarillo); border-radius: 10px;
+  font-size: 9px; font-weight: 700; padding: 1px 5px; margin-left: 5px;
+  font-family: 'DM Mono', monospace; min-width: 16px;
+}
+
+/* DRAWER */
+.drawer {
+  position: fixed; top: 60px; right: 0; width: 520px;
+  height: calc(100vh - 60px); background: var(--negro);
+  border-left: 2px solid var(--amarillo); z-index: 300;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--acero-medio);
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.drawer-titulo { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--blanco); }
+.drawer-sub { font-size: 10px; color: var(--gris); font-family: 'DM Mono', monospace; letter-spacing: 0.08em; margin-top: 2px; }
+.drawer-close { background: none; border: none; color: var(--gris); font-size: 20px; cursor: pointer; padding: 0; line-height: 1; }
+.drawer-close:hover { color: var(--blanco); }
+
+.seg-filtros {
+  padding: 10px 20px; display: flex; gap: 6px;
+  border-bottom: 1px solid var(--acero-medio); flex-shrink: 0; flex-wrap: wrap;
+}
+.seg-chip {
+  padding: 4px 10px; border-radius: 3px; font-size: 10px; font-weight: 700;
+  cursor: pointer; border: 1px solid var(--acero-medio); background: transparent;
+  color: var(--gris); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; transition: all 0.12s;
+}
+.seg-chip.on { border-color: var(--amarillo); color: var(--amarillo); background: #F5C84210; }
+
+.seg-lista { flex: 1; overflow-y: auto; padding: 8px 0; }
+.seg-lista::-webkit-scrollbar { width: 3px; }
+.seg-lista::-webkit-scrollbar-thumb { background: var(--acero-medio); }
+
+.seg-item {
+  padding: 14px 20px; border-bottom: 1px solid var(--acero-medio);
+  display: flex; gap: 12px; align-items: flex-start; transition: background 0.1s;
+}
+.seg-item:hover { background: var(--acero); }
+.seg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.seg-info { flex: 1; min-width: 0; }
+.seg-nombre { font-weight: 600; font-size: 13px; color: var(--blanco); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg-meta { font-size: 10px; color: var(--gris); font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+
+.seg-nota {
+  width: 100%; background: var(--acero); border: 1px solid var(--acero-medio);
+  border-radius: 3px; padding: 6px 8px; color: var(--blanco);
+  font-family: 'DM Sans', sans-serif; font-size: 11px; outline: none;
+  resize: none; min-height: 38px; line-height: 1.4; transition: border-color 0.15s;
+}
+.seg-nota:focus { border-color: var(--amarillo); }
+.seg-nota::placeholder { color: var(--acero-claro); }
+
+.seg-acciones { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+.seg-btn {
+  padding: 4px 8px; border-radius: 3px; font-size: 10px; font-weight: 700;
+  cursor: pointer; border: 1px solid var(--acero-medio); background: transparent;
+  color: var(--gris); font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em; transition: all 0.12s;
+}
+.seg-btn:hover { background: var(--acero-medio); color: var(--blanco); }
+.seg-btn.s-int  { border-color: #68D391; color: #68D391; }
+.seg-btn.s-int:hover  { background: #68D39120; }
+.seg-btn.s-no   { border-color: #FC8181; color: #FC8181; }
+.seg-btn.s-no:hover   { background: #FC818120; }
+.seg-btn.s-seg  { border-color: #F6AD55; color: #F6AD55; }
+.seg-btn.s-seg:hover  { background: #F6AD5520; }
+.seg-btn.s-cer  { border-color: #F5C842; color: #F5C842; }
+.seg-btn.s-cer:hover  { background: #F5C84220; }
+
+.seg-vend {
+  padding: 4px 8px; border-radius: 3px; font-size: 10px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--acero-medio); background: var(--acero);
+  color: var(--gris); font-family: 'DM Mono', monospace; outline: none; margin-left: auto;
+}
+.seg-vend:focus { border-color: var(--amarillo); }
+
+.seg-stats {
+  padding: 12px 20px; border-top: 1px solid var(--acero-medio);
+  display: flex; gap: 16px; flex-shrink: 0; background: var(--acero);
+}
+.seg-stat { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.seg-stat-num { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1; }
+.seg-stat-label { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--gris); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; text-align: center; }
+
+.seg-empty { padding: 60px 30px; text-align: center; color: var(--gris); }
+.seg-empty-ico { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+.seg-empty-tit { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--blanco); opacity: 0.5; margin-bottom: 6px; }
+.seg-empty-desc { font-size: 11px; line-height: 1.6; max-width: 220px; margin: 0 auto; }
+
+/* NOTIF TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--negro);
+  border: 1px solid var(--amarillo);
+  border-radius: 4px;
+  padding: 12px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blanco);
+  z-index: 999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔧</div>
+    <div class="logo-texto">
+      <div class="logo-nombre">FerreMax</div>
+      <div class="logo-tag">Prospector Luqstoff · Buenos Aires</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill">Encontrados: <span class="stat-num" id="totalEncontrados">—</span></div>
+    <div class="stat-pill">Contactados: <span class="stat-num" id="totalContactados">0</span></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="setVista('mapa')">🗺 Mapa</button>
+    <button class="nav-tab" id="tabSeg" onclick="setVista('seguimiento')">📋 Seguimiento <span class="bc" id="segCount">0</span></button>
+  </div>
+</header>
+
+<!-- DRAWER SEGUIMIENTO -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-titulo">Panel de seguimiento</div>
+      <div class="drawer-sub">GESTIÓN DE PROSPECTOS · FERREMAX LUQSTOFF</div>
+    </div>
+    <button class="drawer-close" onclick="setVista('mapa')">✕</button>
+  </div>
+
+  <div class="seg-filtros">
+    <span class="seg-chip on" data-f="todos" onclick="filtrarSeg(this)">TODOS</span>
+    <span class="seg-chip" data-f="nuevo" onclick="filtrarSeg(this)">🆕 NUEVOS</span>
+    <span class="seg-chip" data-f="interesado" onclick="filtrarSeg(this)">✅ INTERESADOS</span>
+    <span class="seg-chip" data-f="seguimiento" onclick="filtrarSeg(this)">🔄 EN SEGUIMIENTO</span>
+    <span class="seg-chip" data-f="cerrado" onclick="filtrarSeg(this)">🏆 CERRADOS</span>
+    <span class="seg-chip" data-f="no_interesa" onclick="filtrarSeg(this)">❌ NO INTERESA</span>
+  </div>
+
+  <div class="seg-lista" id="segLista">
+    <div class="seg-empty">
+      <div class="seg-empty-ico">📋</div>
+      <div class="seg-empty-tit">Sin prospectos aún</div>
+      <div class="seg-empty-desc">Buscá clientes en el mapa y asignalos a vendedores para verlos acá.</div>
+    </div>
+  </div>
+
+  <div class="seg-stats">
+    <div class="seg-stat">
+      <div class="seg-stat-num" id="sSTotal" style="color:var(--amarillo)">0</div>
+      <div class="seg-stat-label">Total</div>
+    </div>
+    <div class="seg-stat">
+      <div class="seg-stat-num" id="sSInt" style="color:#68D391">0</div>
+      <div class="seg-stat-label">Interesados</div>
+    </div>
+    <div class="seg-stat">
+      <div class="seg-stat-num" id="sSSeg" style="color:#F6AD55">0</div>
+      <div class="seg-stat-label">En seguimiento</div>
+    </div>
+    <div class="seg-stat">
+      <div class="seg-stat-num" id="sSCer" style="color:#F5C842">0</div>
+      <div class="seg-stat-label">Cerrados</div>
+    </div>
+    <div class="seg-stat">
+      <div class="seg-stat-num" id="sSNo" style="color:#FC8181">0</div>
+      <div class="seg-stat-label">No interesa</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- PANEL IZQUIERDO -->
+  <div class="panel-izq">
+    <div class="search-zone">
+      <div class="search-title">Encontrar clientes</div>
+      <div class="search-sub">Buscá ferreterías, mayoristas y distribuidores en Buenos Aires para ofrecerles productos Luqstoff.</div>
+
+      <div class="field-label">Zona / Barrio / Localidad</div>
+      <input type="text" class="search-input" id="zonaInput" placeholder="Ej: Palermo, La Matanza, Quilmes…" value="Buenos Aires, Argentina">
+
+      <div class="field-label">Tipo de cliente</div>
+      <div class="chips-wrap" id="chips">
+        <span class="chip on" data-tipo="ferretería">🔩 Ferreterías</span>
+        <span class="chip on" data-tipo="mayorista">📦 Mayoristas</span>
+        <span class="chip on" data-tipo="distribuidor">🚚 Distribuidores</span>
+        <span class="chip" data-tipo="construcción">🏗️ Construcción</span>
+        <span class="chip" data-tipo="pinturería">🎨 Pinturerías</span>
+      </div>
+
+      <button class="btn-buscar" id="btnBuscar" onclick="buscar()">
+        <span id="btnTexto">🔍 BUSCAR PROSPECTOS</span>
+      </button>
+    </div>
+
+    <div class="lista-header">
+      <div class="lista-count">Resultados: <span id="countNum">—</span></div>
+      <button class="btn-exp" onclick="exportar()">⬇ Exportar</button>
+    </div>
+
+    <div class="lista" id="lista">
+      <div class="estado" style="padding:30px; text-align:center; color: var(--gris);">
+        <div class="estado-icono">🗺️</div>
+        <div class="estado-titulo">Ingresá una zona</div>
+        <div class="estado-desc">El sistema buscará clientes potenciales con IA y los mostrará en el mapa.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONA MAPA -->
+  <div class="zona-central">
+    <div id="mapa"></div>
+
+    <!-- FICHA DETALLE -->
+    <div class="ficha" id="ficha">
+      <div class="ficha-top">
+        <div>
+          <div class="ficha-eyebrow">Prospecto detectado</div>
+          <div class="ficha-nombre" id="fichaNombre">—</div>
+          <div class="ficha-tipo" id="fichaSubtipo">—</div>
+        </div>
+        <button class="ficha-close" onclick="cerrarFicha()">✕</button>
+      </div>
+
+      <div class="ficha-datos" id="fichaDatos"></div>
+
+      <div class="ficha-msg">
+        <div class="msg-title">✉ Mensaje de venta</div>
+
+        <div class="msg-tipo-btns">
+          <button class="msg-tipo-btn on" onclick="setMsgTipo(this,'whatsapp')">WhatsApp</button>
+          <button class="msg-tipo-btn" onclick="setMsgTipo(this,'email')">Email</button>
+          <button class="msg-tipo-btn" onclick="setMsgTipo(this,'vendedor')">Para vendedor</button>
+        </div>
+
+        <textarea class="msg-textarea" id="msgTexto" placeholder="El mensaje aparecerá aquí…"></textarea>
+
+        <button class="btn-generar" id="btnGenerar" onclick="generarMensaje()">
+          ✦ GENERAR MENSAJE CON IA
+        </button>
+
+        <div class="msg-acciones">
+          <button class="btn-enviar btn-wa" onclick="enviarWA()">📱 WhatsApp</button>
+          <button class="btn-enviar btn-mail" onclick="copiarMsg()">📋 Copiar</button>
+        </div>
+        <button class="btn-vendedor" onclick="asignarVendedor()">👤 Asignar a vendedor</button>
+      </div>
+    </div>
+
+    <div class="mapa-leyenda">
+      <div class="ley-item"><div class="ley-dot" style="background:#F5C842"></div>Ferretería</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#68D391"></div>Mayorista</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#FC8181"></div>Distribuidor</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#B794F4"></div>Otro</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Google Maps -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNgo&libraries=places&callback=initMapa" async defer></script>
+
+<script>
+let mapa, geocoder, markers = [], prospectos = [], seleccionado = null;
+let tiposActivos = new Set(['ferretería','mayorista','distribuidor']);
+let msgTipoActual = 'whatsapp';
+let contactadosHoy = 0;
+
+function initMapa() {
+  geocoder = new google.maps.Geocoder();
+  mapa = new google.maps.Map(document.getElementById('mapa'), {
+    center: { lat: -34.6037, lng: -58.3816 },
+    zoom: 11,
+    mapTypeId: 'roadmap',
+    styles: [
+      { elementType: 'geometry', stylers: [{ color: '#1E2530' }] },
+      { elementType: 'labels.text.fill', stylers: [{ color: '#A0AEC0' }] },
+      { elementType: 'labels.text.stroke', stylers: [{ color: '#0F0F0F' }] },
+      { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2D3748' }] },
+      { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#38495E' }] },
+      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0F1923' }] },
+      { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    ],
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+  });
+}
+
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    const tipo = c.dataset.tipo;
+    if (tiposActivos.has(tipo)) { tiposActivos.delete(tipo); c.classList.remove('on'); }
+    else { tiposActivos.add(tipo); c.classList.add('on'); }
+  });
+});
+
+function setMsgTipo(el, tipo) {
+  document.querySelectorAll('.msg-tipo-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  msgTipoActual = tipo;
+  document.getElementById('msgTexto').value = '';
+}
+
+// ── MAPEO DE TIPOS A QUERIES DE PLACES ──
+const QUERIES_POR_TIPO = {
+  'ferretería':   ['ferretería', 'ferreteria'],
+  'mayorista':    ['mayorista ferretería', 'distribuidora herramientas'],
+  'distribuidor': ['distribuidor materiales', 'distribuidor herramientas'],
+  'construcción': ['materiales construcción', 'corralón'],
+  'pinturería':   ['pinturería', 'pinturas'],
+};
+
+async function buscar() {
+  const zona = document.getElementById('zonaInput').value.trim();
+  if (!zona) return;
+
+  const btn = document.getElementById('btnBuscar');
+  const btnTxt = document.getElementById('btnTexto');
+  btn.disabled = true;
+  btnTxt.innerHTML = '<span class="spinner"></span> Buscando…';
+
+  document.getElementById('lista').innerHTML = `<div style="padding:40px;text-align:center;color:var(--gris)"><div class="spinner" style="width:24px;height:24px;margin:0 auto 12px"></div><div style="font-size:12px;margin-top:8px">Buscando negocios reales con Google Maps…</div></div>`;
+  document.getElementById('countNum').textContent = '…';
+  limpiarMarkers();
+  cerrarFicha();
+
+  geocoder.geocode({ address: zona + ', Buenos Aires, Argentina' }, async (res, status) => {
+    if (status !== 'OK') {
+      document.getElementById('lista').innerHTML = `<div style="padding:40px;text-align:center;color:var(--gris);font-size:12px">Zona no encontrada. Probá con otro nombre.</div>`;
+      btn.disabled = false;
+      btnTxt.innerHTML = '🔍 BUSCAR PROSPECTOS';
+      return;
+    }
+
+    const centro = res[0].geometry.location;
+    mapa.setCenter(centro);
+    mapa.setZoom(14);
+
+    // Buscar con Places API para cada tipo activo
+    const lugaresRaw = await buscarEnPlaces(centro, zona);
+    
+    if (!lugaresRaw.length) {
+      document.getElementById('lista').innerHTML = `<div style="padding:40px;text-align:center;color:var(--gris);font-size:12px">No se encontraron negocios en esa zona. Probá con otra.</div>`;
+      btn.disabled = false;
+      btnTxt.innerHTML = '🔍 BUSCAR PROSPECTOS';
+      return;
+    }
+
+    // Enriquecer con IA (potencial, nota, contacto estimado)
+    actualizarStatus('Enriqueciendo datos con IA…');
+    const enriquecidos = await enriquecerConIA(lugaresRaw, zona);
+    prospectos = enriquecidos;
+    renderLista(enriquecidos);
+    ponerMarkers(enriquecidos);
+    document.getElementById('totalEncontrados').textContent = enriquecidos.length;
+
+    btn.disabled = false;
+    btnTxt.innerHTML = '🔍 BUSCAR PROSPECTOS';
+  });
+}
+
+function actualizarStatus(msg) {
+  document.getElementById('lista').innerHTML = `<div style="padding:40px;text-align:center;color:var(--gris)"><div class="spinner" style="width:24px;height:24px;margin:0 auto 12px"></div><div style="font-size:12px;margin-top:8px">${msg}</div></div>`;
+}
+
+// Busca lugares reales con PlacesService
+async function buscarEnPlaces(centro, zona) {
+  const service = new google.maps.places.PlacesService(mapa);
+  const todosLugares = [];
+  const ids = new Set();
+
+  // Queries según tipos activos
+  const queries = [];
+  tiposActivos.forEach(tipo => {
+    (QUERIES_POR_TIPO[tipo] || [tipo]).forEach(q => queries.push({ q, tipo }));
+  });
+
+  for (const { q, tipo } of queries) {
+    const resultados = await new Promise(resolve => {
+      service.textSearch({
+        query: q,
+        location: centro,
+        radius: 3000,
+      }, (results, status) => {
+        resolve(status === google.maps.places.PlacesServiceStatus.OK ? results : []);
+      });
+    });
+
+    for (const lugar of (resultados || []).slice(0, 8)) {
+      if (ids.has(lugar.place_id)) continue;
+      ids.add(lugar.place_id);
+
+      // Obtener detalles completos
+      const detalle = await new Promise(resolve => {
+        service.getDetails({
+          placeId: lugar.place_id,
+          fields: ['name','formatted_address','formatted_phone_number','website','geometry','rating','user_ratings_total','opening_hours','types']
+        }, (result, status) => {
+          resolve(status === google.maps.places.PlacesServiceStatus.OK ? result : null);
+        });
+      });
+
+      if (!detalle) continue;
+
+      todosLugares.push({
+        place_id: lugar.place_id,
+        nombre: detalle.name,
+        tipo_detectado: tipo,
+        direccion: detalle.formatted_address?.replace(', Buenos Aires, Argentina', '').replace(', Argentina', '') || lugar.formatted_address || '',
+        telefono: detalle.formatted_phone_number || '—',
+        website: detalle.website || '',
+        lat: detalle.geometry.location.lat(),
+        lng: detalle.geometry.location.lng(),
+        rating: detalle.rating || null,
+        reviews: detalle.user_ratings_total || 0,
+        types: detalle.types || [],
+      });
+
+      if (todosLugares.length >= 20) break;
+    }
+    if (todosLugares.length >= 20) break;
+  }
+
+  return todosLugares;
+}
+
+// Enriquece con IA: potencial, nota, contacto estimado, email sugerido
+async function enriquecerConIA(lugares, zona) {
+  const lista = lugares.map((l, i) => `${i+1}. ${l.nombre} (${l.tipo_detectado}) en ${l.direccion}${l.rating ? `, rating ${l.rating}` : ''}`).join('\n');
+
+  const prompt = `Sos experto en ventas B2B de productos de ferretería en Buenos Aires. FerreMax es importadora de Luqstoff (lubricantes, selladores, adhesivos técnicos, sprays de mantenimiento, productos de limpieza industrial, marca alemana, excelente precio-calidad).
+
+Estos son negocios REALES encontrados en ${zona}, Buenos Aires:
+${lista}
+
+Para cada uno, analizá su potencial como cliente de FerreMax y respondé SOLO con JSON válido (sin backticks):
+[
+  {
+    "idx": 1,
+    "tipo": "ferretería" | "mayorista" | "distribuidor" | "construcción" | "pinturería",
+    "potencial": "alto" | "medio" | "bajo",
+    "contacto": "cargo probable del responsable de compras (ej: Encargado de compras, Dueño, Jefe de stock)",
+    "email_sugerido": "email inventado pero creíble basado en el nombre del negocio",
+    "nota": "razón concreta por la que necesitaría Luqstoff (máx 60 chars)"
+  }
+]
+
+El array debe tener exactamente ${lugares.length} objetos en el mismo orden.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content.map(b => b.text || '').join('');
+    const clean = txt.replace(/```json|```/g, '').trim();
+    const enriched = JSON.parse(clean);
+
+    return lugares.map((l, i) => {
+      const e = enriched[i] || {};
+      return {
+        id: i + 1,
+        place_id: l.place_id,
+        nombre: l.nombre,
+        tipo: e.tipo || l.tipo_detectado,
+        direccion: l.direccion,
+        barrio: zona,
+        telefono: l.telefono,
+        email: e.email_sugerido || '—',
+        website: l.website,
+        contacto: e.contacto || 'Responsable de compras',
+        lat: l.lat,
+        lng: l.lng,
+        rating: l.rating,
+        reviews: l.reviews,
+        potencial: e.potencial || 'medio',
+        nota: e.nota || 'Potencial cliente Luqstoff',
+        real: true,
+      };
+    });
+  } catch(e) {
+    // Si falla IA, devolver con datos básicos
+    return lugares.map((l, i) => ({
+      id: i + 1,
+      ...l,
+      tipo: l.tipo_detectado,
+      barrio: zona,
+      email: '—',
+      contacto: 'Responsable de compras',
+      potencial: 'medio',
+      nota: 'Prospecto identificado por Google Maps',
+      real: true,
+    }));
+  }
+}
+
+function fallback(lat, lng, zona) {
+  return [
+    {id:1,nombre:"Ferretería El Tornillo",tipo:"ferretería",direccion:"Av. Rivadavia 4521",barrio:zona,telefono:"+54 11 4923-1234",email:"tornillo@fmail.com.ar",contacto:"Carlos Méndez",lat:lat+0.01,lng:lng+0.01,potencial:"alto",nota:"Stock de lubricantes casi agotado"},
+    {id:2,nombre:"Distribuidora Norte S.A.",tipo:"mayorista",direccion:"Larrea 890",barrio:zona,telefono:"+54 11 4855-9900",email:"compras@disnorte.com.ar",contacto:"Graciela Torres",lat:lat-0.008,lng:lng+0.015,potencial:"alto",nota:"Abastece 40+ ferreterías de la zona"},
+    {id:3,nombre:"Materiales Construir",tipo:"construcción",direccion:"Av. San Martín 2203",barrio:zona,telefono:"+54 11 4712-3300",email:"ventas@construir.com.ar",contacto:"Pablo Ortega",lat:lat+0.015,lng:lng-0.01,potencial:"medio",nota:"Demanda selladores y adhesivos técnicos"}
+  ];
+}
+
+const COLORES = { ferretería:'#F5C842', mayorista:'#68D391', distribuidor:'#FC8181', construcción:'#B794F4', pinturería:'#76E4F7' };
+
+function ponerMarkers(data) {
+  limpiarMarkers();
+  data.forEach(p => {
+    const color = COLORES[p.tipo] || '#A0AEC0';
+    const m = new google.maps.Marker({
+      position: { lat: p.lat, lng: p.lng },
+      map: mapa,
+      title: p.nombre,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: p.potencial === 'alto' ? 11 : p.potencial === 'medio' ? 8 : 6,
+        fillColor: color,
+        fillOpacity: 0.9,
+        strokeColor: '#0F0F0F',
+        strokeWeight: 2
+      }
+    });
+    m.addListener('click', () => seleccionar(p.id));
+    markers.push(m);
+  });
+}
+
+function limpiarMarkers() { markers.forEach(m => m.setMap(null)); markers = []; }
+
+const EMOJIS = { ferretería:'🔩', mayorista:'📦', distribuidor:'🚚', construcción:'🏗️', pinturería:'🎨' };
+const POTENCIAL_COLOR = { alto:'#68D391', medio:'#F5C842', bajo:'#FC8181' };
+
+function renderLista(data) {
+  if (!data.length) {
+    document.getElementById('lista').innerHTML = `<div style="padding:30px;text-align:center;color:var(--gris);font-size:12px">Sin resultados. Ajustá los filtros.</div>`;
+    document.getElementById('countNum').textContent = '0';
+    return;
+  }
+  document.getElementById('countNum').textContent = data.length;
+  document.getElementById('lista').innerHTML = data.map(p => `
+    <div class="item" id="item-${p.id}" onclick="seleccionar(${p.id})">
+      <div class="item-tipo-badge" style="background:${COLORES[p.tipo]}22;width:34px;height:34px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px">
+        ${EMOJIS[p.tipo] || '🏪'}
+      </div>
+      <div class="item-info">
+        <div class="item-nombre">${p.nombre}</div>
+        <div class="item-dir">📍 ${p.direccion}</div>
+        <div class="item-badges">
+          <span class="ibadge ibadge-tipo">${p.tipo.toUpperCase()}</span>
+          <span class="ibadge" style="background:${POTENCIAL_COLOR[p.potencial]}22;color:${POTENCIAL_COLOR[p.potencial]};border:1px solid ${POTENCIAL_COLOR[p.potencial]}44">● ${p.potencial.toUpperCase()}</span>
+          ${p.rating ? `<span class="ibadge" style="background:#2D374880;color:#F6E05E;border:1px solid #4A4A2A">★ ${p.rating}</span>` : ''}
+          ${p.real ? `<span class="ibadge" style="background:#1A3A2A;color:#68D391;border:1px solid #2A5A3A">✓ REAL</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function seleccionar(id) {
+  seleccionado = prospectos.find(p => p.id === id);
+  if (!seleccionado) return;
+
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById(`item-${id}`);
+  if (el) { el.classList.add('selected'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+
+  mapa.panTo({ lat: seleccionado.lat, lng: seleccionado.lng });
+  mapa.setZoom(15);
+
+  document.getElementById('fichaNombre').textContent = seleccionado.nombre;
+  document.getElementById('fichaSubtipo').textContent = `${EMOJIS[seleccionado.tipo] || ''} ${seleccionado.tipo} · Potencial ${seleccionado.potencial}`;
+
+  const p = seleccionado;
+  document.getElementById('fichaDatos').innerHTML = `
+    <div class="dato-row"><span class="dato-key">Dirección</span><span class="dato-val">${p.direccion}</span></div>
+    <div class="dato-row"><span class="dato-key">Contacto</span><span class="dato-val">${p.contacto}</span></div>
+    <div class="dato-row"><span class="dato-key">Teléfono</span><span class="dato-val">${p.telefono !== '—' ? `<a href="tel:${p.telefono}" style="color:var(--amarillo);text-decoration:none">${p.telefono}</a>` : '—'}</span></div>
+    ${p.website ? `<div class="dato-row"><span class="dato-key">Web</span><span class="dato-val"><a href="${p.website}" target="_blank" style="color:var(--amarillo);font-size:11px;text-decoration:none">🌐 Ver sitio</a></span></div>` : ''}
+    <div class="dato-row"><span class="dato-key">Email</span><span class="dato-val" style="font-size:11px">${p.email !== '—' ? p.email : '<span style="color:var(--gris)">Estimado por IA</span>'}</span></div>
+    ${p.rating ? `<div class="dato-row"><span class="dato-key">Rating Google</span><span class="dato-val" style="color:#F6E05E">★ ${p.rating} <span style="color:var(--gris);font-size:10px">(${p.reviews} reseñas)</span></span></div>` : ''}
+    <div class="dato-row"><span class="dato-key">Oportunidad</span><span class="dato-val" style="color:var(--amarillo);font-size:11px">${p.nota}</span></div>
+    ${p.place_id ? `<div class="dato-row"><span class="dato-key">Maps</span><span class="dato-val"><a href="https://www.google.com/maps/place/?q=place_id:${p.place_id}" target="_blank" style="color:var(--amarillo);font-size:11px;text-decoration:none">📍 Ver en Google Maps</a></span></div>` : ''}
+  `;
+
+  document.getElementById('msgTexto').value = '';
+  document.getElementById('ficha').classList.add('visible');
+}
+
+function cerrarFicha() {
+  document.getElementById('ficha').classList.remove('visible');
+  seleccionado = null;
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
+}
+
+async function generarMensaje() {
+  if (!seleccionado) return;
+  const btn = document.getElementById('btnGenerar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generando…';
+  document.getElementById('msgTexto').value = '';
+
+  const tipoMsg = msgTipoActual;
+  const p = seleccionado;
+
+  const prompt = `Sos el equipo de ventas de FerreMax, importadora argentina de productos Luqstoff (marca alemana: lubricantes, selladores, adhesivos técnicos, sprays de mantenimiento, productos de limpieza industrial). Precio-calidad excelente, con distribución en Buenos Aires.
+
+Escribí un mensaje de venta ${tipoMsg === 'whatsapp' ? 'para WhatsApp (informal, directo, máx 5 líneas, con algún emoji, en tono comercial amigable)' : tipoMsg === 'email' ? 'formal para email (asunto + cuerpo, máx 8 líneas, profesional)' : 'para que un vendedor lo use como guía de llamado o visita (puntos clave a mencionar, objeciones posibles, cierre sugerido)'}.
+
+Cliente: ${p.nombre}
+Tipo: ${p.tipo}
+Contacto: ${p.contacto}
+Nota sobre el cliente: ${p.nota}
+
+El mensaje debe ser específico para este cliente y mencionar los productos Luqstoff que más le convendrían. NO uses lenguaje genérico. Respondé SOLO con el mensaje, sin explicaciones.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content.map(b => b.text || '').join('');
+    document.getElementById('msgTexto').value = txt.trim();
+  } catch(e) {
+    document.getElementById('msgTexto').value = 'Error al generar el mensaje. Intentá de nuevo.';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✦ GENERAR MENSAJE CON IA';
+}
+
+function enviarWA() {
+  const msg = document.getElementById('msgTexto').value;
+  if (!msg) { mostrarToast('⚠ Generá un mensaje primero'); return; }
+  const tel = seleccionado?.telefono?.replace(/\D/g,'') || '';
+  const url = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  registrarContacto();
+}
+
+function copiarMsg() {
+  const msg = document.getElementById('msgTexto').value;
+  if (!msg) { mostrarToast('⚠ Generá un mensaje primero'); return; }
+  navigator.clipboard.writeText(msg).then(() => mostrarToast('✓ Mensaje copiado al portapapeles'));
+}
+
+function asignarVendedor() {
+  if (!seleccionado) return;
+  mostrarToast(`✓ ${seleccionado.nombre} asignado a vendedor`);
+  registrarContacto();
+  const el = document.getElementById(`item-${seleccionado.id}`);
+  if (el) {
+    const badges = el.querySelector('.item-badges');
+    if (badges && !badges.querySelector('.ibadge-asig')) {
+      const b = document.createElement('span');
+      b.className = 'ibadge';
+      b.style.cssText = 'background:#2C3A4A;color:#90CDF4;border:1px solid #4A6080';
+      b.textContent = '👤 ASIGNADO';
+      badges.appendChild(b);
+    }
+  }
+}
+
+function registrarContacto() {
+  contactadosHoy++;
+  document.getElementById('totalContactados').textContent = contactadosHoy;
+}
+
+function exportar() {
+  if (!prospectos.length) { mostrarToast('⚠ Primero realizá una búsqueda'); return; }
+  const cols = ['Nombre','Tipo','Dirección','Barrio','Teléfono','Email','Contacto','Potencial','Nota'];
+  const rows = prospectos.map(p => [p.nombre,p.tipo,p.direccion,p.barrio,p.telefono,p.email,p.contacto,p.potencial,p.nota]);
+  const csv = [cols,...rows].map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'ferremax-prospectos.csv'; a.click();
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+document.getElementById('zonaInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscar();
+});
+
+// ══════════════════════════════════════════
+// SEGUIMIENTO
+// ══════════════════════════════════════════
+
+const VENDEDORES = ['Sin asignar', 'Lucas M.', 'Carla R.', 'Martín G.', 'Ana P.'];
+const ESTADO_COLOR = {
+  nuevo: '#A0AEC0',
+  interesado: '#68D391',
+  seguimiento: '#F6AD55',
+  cerrado: '#F5C842',
+  no_interesa: '#FC8181',
+};
+const ESTADO_LABEL = {
+  nuevo: '🆕 Nuevo',
+  interesado: '✅ Interesado',
+  seguimiento: '🔄 Seguimiento',
+  cerrado: '🏆 Cerrado',
+  no_interesa: '❌ No interesa',
+};
+
+let seguimientos = {}; // { place_id: { ...datos, estado, nota, vendedor, fechaContacto } }
+let filtroSeg = 'todos';
+
+// Cargar desde storage al iniciar
+(async () => {
+  try {
+    const r = await window.storage.get('ferremax-seguimientos');
+    if (r) seguimientos = JSON.parse(r.value);
+    actualizarUI();
+  } catch(e) { seguimientos = {}; }
+})();
+
+async function guardarStorage() {
+  try {
+    await window.storage.set('ferremax-seguimientos', JSON.stringify(seguimientos));
+  } catch(e) { console.warn('Storage no disponible'); }
+}
+
+function setVista(v) {
+  const drawer = document.getElementById('drawer');
+  const tabs = document.querySelectorAll('.nav-tab');
+  if (v === 'seguimiento') {
+    drawer.classList.add('open');
+    tabs[1].classList.add('active');
+    tabs[0].classList.remove('active');
+    renderSeguimiento();
+  } else {
+    drawer.classList.remove('open');
+    tabs[0].classList.add('active');
+    tabs[1].classList.remove('active');
+  }
+}
+
+function filtrarSeg(el) {
+  document.querySelectorAll('.seg-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  filtroSeg = el.dataset.f;
+  renderSeguimiento();
+}
+
+function agregarASeguimiento(prospecto) {
+  const key = prospecto.place_id || `gen-${prospecto.id}`;
+  if (!seguimientos[key]) {
+    seguimientos[key] = {
+      key,
+      nombre: prospecto.nombre,
+      tipo: prospecto.tipo,
+      direccion: prospecto.direccion,
+      telefono: prospecto.telefono,
+      email: prospecto.email,
+      contacto: prospecto.contacto,
+      nota: '',
+      potencial: prospecto.potencial,
+      estado: 'nuevo',
+      vendedor: 'Sin asignar',
+      fechaContacto: new Date().toLocaleDateString('es-AR'),
+      notaIA: prospecto.nota,
+    };
+    guardarStorage();
+    actualizarUI();
+  }
+}
+
+function renderSeguimiento() {
+  const lista = Object.values(seguimientos);
+  const filtrados = filtroSeg === 'todos' ? lista : lista.filter(s => s.estado === filtroSeg);
+
+  if (!filtrados.length) {
+    document.getElementById('segLista').innerHTML = `
+      <div class="seg-empty">
+        <div class="seg-empty-ico">${filtroSeg === 'todos' ? '📋' : '🔍'}</div>
+        <div class="seg-empty-tit">${filtroSeg === 'todos' ? 'Sin prospectos aún' : 'Sin resultados'}</div>
+        <div class="seg-empty-desc">${filtroSeg === 'todos' ? 'Buscá clientes en el mapa, luego asignalos a un vendedor para verlos acá.' : 'No hay prospectos con ese estado.'}</div>
+      </div>`;
+    return;
+  }
+
+  // Ordenar: cerrados al fondo
+  const orden = { nuevo: 0, interesado: 1, seguimiento: 2, no_interesa: 3, cerrado: 4 };
+  filtrados.sort((a,b) => (orden[a.estado]||0) - (orden[b.estado]||0));
+
+  document.getElementById('segLista').innerHTML = filtrados.map(s => `
+    <div class="seg-item" id="sitem-${s.key}">
+      <div class="seg-dot" style="background:${ESTADO_COLOR[s.estado] || '#A0AEC0'}"></div>
+      <div class="seg-info">
+        <div class="seg-nombre">${s.nombre}</div>
+        <div class="seg-meta">
+          ${s.tipo.toUpperCase()} · ${s.fechaContacto} · ${ESTADO_LABEL[s.estado]}
+          ${s.telefono !== '—' ? ` · <a href="tel:${s.telefono}" style="color:var(--amarillo);text-decoration:none">${s.telefono}</a>` : ''}
+        </div>
+        ${s.notaIA ? `<div style="font-size:10px;color:var(--amarillo);margin-bottom:6px;font-style:italic">💡 ${s.notaIA}</div>` : ''}
+        <textarea class="seg-nota" rows="2" placeholder="Anotá el resultado del contacto, próximo paso, etc…"
+          onchange="actualizarNota('${s.key}', this.value)"
+        >${s.nota}</textarea>
+        <div class="seg-acciones">
+          <button class="seg-btn s-int" onclick="cambiarEstado('${s.key}','interesado')">✅ Interesado</button>
+          <button class="seg-btn s-seg" onclick="cambiarEstado('${s.key}','seguimiento')">🔄 Seguimiento</button>
+          <button class="seg-btn s-cer" onclick="cambiarEstado('${s.key}','cerrado')">🏆 Cerrado</button>
+          <button class="seg-btn s-no"  onclick="cambiarEstado('${s.key}','no_interesa')">❌ No interesa</button>
+          <select class="seg-vend" onchange="cambiarVendedor('${s.key}', this.value)">
+            ${VENDEDORES.map(v => `<option${v === s.vendedor ? ' selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function actualizarNota(key, val) {
+  if (seguimientos[key]) {
+    seguimientos[key].nota = val;
+    guardarStorage();
+  }
+}
+
+function cambiarEstado(key, estado) {
+  if (seguimientos[key]) {
+    seguimientos[key].estado = estado;
+    guardarStorage();
+    actualizarUI();
+    renderSeguimiento();
+    mostrarToast(`✓ Estado actualizado: ${ESTADO_LABEL[estado]}`);
+  }
+}
+
+function cambiarVendedor(key, vendedor) {
+  if (seguimientos[key]) {
+    seguimientos[key].vendedor = vendedor;
+    guardarStorage();
+    mostrarToast(`✓ Asignado a ${vendedor}`);
+  }
+}
+
+function actualizarUI() {
+  const lista = Object.values(seguimientos);
+  const total = lista.length;
+  document.getElementById('segCount').textContent = total;
+  document.getElementById('sSTotal').textContent = total;
+  document.getElementById('sSInt').textContent  = lista.filter(s => s.estado === 'interesado').length;
+  document.getElementById('sSSeg').textContent  = lista.filter(s => s.estado === 'seguimiento').length;
+  document.getElementById('sSCer').textContent  = lista.filter(s => s.estado === 'cerrado').length;
+  document.getElementById('sSNo').textContent   = lista.filter(s => s.estado === 'no_interesa').length;
+}
+
+// Override asignarVendedor para que también agregue al seguimiento
+const _asignarOriginal = asignarVendedor;
+asignarVendedor = function() {
+  if (!seleccionado) return;
+  agregarASeguimiento(seleccionado);
+  registrarContacto();
+  const el = document.getElementById(`item-${seleccionado.id}`);
+  if (el) {
+    const badges = el.querySelector('.item-badges');
+    if (badges && !badges.querySelector('.ibadge-asig')) {
+      const b = document.createElement('span');
+      b.className = 'ibadge ibadge-asig';
+      b.style.cssText = 'background:#2C3A4A;color:#90CDF4;border:1px solid #4A6080';
+      b.textContent = '📋 EN SEGUIMIENTO';
+      badges.appendChild(b);
+    }
+  }
+  mostrarToast(`✓ ${seleccionado.nombre} agregado al seguimiento`);
+};
+
+// También registrar cuando se envía por WA o se copia
+const _enviarWAOrig = enviarWA;
+enviarWA = function() {
+  if (seleccionado) agregarASeguimiento(seleccionado);
+  _enviarWAOrig();
+};
+</script>
+</body>
+</html>
