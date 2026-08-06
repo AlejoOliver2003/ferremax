@@ -1,0 +1,43 @@
+{
+  "name": "ProspectAI — Sistema de Prospección",
+  "short_name": "ProspectAI",
+  "description": "Sistema de prospección, CRM y gestión de ventas con IA",
+  "start_url": "/shell.html",
+  "display": "standalone",
+  "background_color": "#111318",
+  "theme_color": "#2563EB",
+  "orientation": "any",
+  "lang": "es",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Prospector",
+      "short_name": "Prospector",
+      "description": "Buscar nuevos prospectos",
+      "url": "/shell.html#prospector",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "CRM",
+      "short_name": "CRM",
+      "description": "Gestionar clientes",
+      "url": "/shell.html#crm",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

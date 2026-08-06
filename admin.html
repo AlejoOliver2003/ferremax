@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProspectAI — Panel de Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#111318;--negro-m:#1C1F26;--negro-c:#252830;--negro-b:#2A2D35;
+  --blanco:#F0EEE9;--blanco-d:#9CA3AF;
+  --azul:#2563EB;--azul-l:#3B82F6;--azul-xl:#93C5FD;
+  --verde:#22C55E;--rojo:#EF4444;--naranja:#F59E0B;--morado:#8B5CF6;
+}
+body{font-family:'Inter',sans-serif;background:var(--negro);color:var(--blanco);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;background:var(--negro-m);border-right:1px solid rgba(240,238,233,.06);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(240,238,233,.06)}
+.sidebar-logo a{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--blanco);text-decoration:none}
+.sidebar-logo a span{color:var(--azul)}
+.sidebar-logo-sub{font-size:10px;color:var(--blanco-d);font-family:'DM Mono',monospace;letter-spacing:.1em;margin-top:2px}
+.sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;color:var(--blanco-d);border:none;background:none;width:100%;text-align:left;font-family:'Inter',sans-serif}
+.nav-item:hover{background:var(--negro-c);color:var(--blanco)}
+.nav-item.active{background:rgba(37,99,235,.15);color:var(--azul-xl);font-weight:600}
+.nav-item .nav-ico{font-size:16px;width:20px;text-align:center}
+.nav-section{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(240,238,233,.3);padding:16px 12px 6px;font-family:'DM Mono',monospace}
+.sidebar-bottom{padding:16px 12px;border-top:1px solid rgba(240,238,233,.06)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;background:var(--negro-c)}
+.user-avatar{width:32px;height:32px;background:var(--azul);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;flex-shrink:0}
+.user-name{font-size:12px;font-weight:600;color:var(--blanco)}
+.user-role{font-size:10px;color:var(--blanco-d)}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--negro-m);border-bottom:1px solid rgba(240,238,233,.06);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-badge{background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--azul-xl);font-family:'DM Mono',monospace}
+.btn-nuevo{background:var(--azul);color:var(--blanco);border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s}
+.btn-nuevo:hover{background:var(--azul-l)}
+
+/* CONTENT */
+.content{padding:32px;flex:1}
+
+/* ── VISTAS ── */
+.vista{display:none}
+.vista.active{display:block}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.kpi-card{background:var(--negro-m);border:1px solid rgba(240,238,233,.08);border-radius:10px;padding:24px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi-card:hover{border-color:rgba(240,238,233,.16)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.azul::before{background:var(--azul)}
+.kpi-card.verde::before{background:var(--verde)}
+.kpi-card.naranja::before{background:var(--naranja)}
+.kpi-card.morado::before{background:var(--morado)}
+.kpi-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blanco-d);font-family:'DM Mono',monospace;margin-bottom:10px}
+.kpi-num{font-family:'Syne',sans-serif;font-weight:800;font-size:36px;line-height:1;letter-spacing:-.03em;margin-bottom:6px}
+.kpi-change{font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px}
+.kpi-change.up{color:var(--verde)}
+.kpi-change.down{color:var(--rojo)}
+.kpi-ico{position:absolute;top:20px;right:20px;font-size:28px;opacity:.15}
+
+/* ── GRID 2 COL ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ── PANEL ── */
+.panel{background:var(--negro-m);border:1px solid rgba(240,238,233,.08);border-radius:10px;padding:24px}
+.panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px}
+.panel-sub{font-size:12px;color:var(--blanco-d);margin-bottom:20px}
+
+/* ── TABLA VENDEDORES ── */
+.tabla{width:100%;border-collapse:collapse}
+.tabla th{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blanco-d);font-family:'DM Mono',monospace;padding:0 0 12px;text-align:left;border-bottom:1px solid rgba(240,238,233,.08)}
+.tabla td{padding:12px 0;border-bottom:1px solid rgba(240,238,233,.04);font-size:13px;vertical-align:middle}
+.tabla tr:last-child td{border-bottom:none}
+.vend-info{display:flex;align-items:center;gap:10px}
+.vend-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;flex-shrink:0}
+.vend-nombre{font-weight:600;font-size:13px}
+.vend-zona{font-size:11px;color:var(--blanco-d)}
+.progress-wrap{display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;background:rgba(240,238,233,.08);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s}
+.progress-num{font-size:11px;font-family:'DM Mono',monospace;color:var(--blanco-d);width:28px;text-align:right}
+.estado-badge{padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace}
+
+/* ── ACTIVIDAD RECIENTE ── */
+.actividad-list{display:flex;flex-direction:column;gap:0}
+.act-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(240,238,233,.04);align-items:flex-start}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.act-info{flex:1}
+.act-texto{font-size:13px;line-height:1.4}
+.act-texto strong{color:var(--blanco)}
+.act-tiempo{font-size:11px;color:var(--blanco-d);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* ── MAPA CALOR (fake) ── */
+.zona-list{display:flex;flex-direction:column;gap:8px}
+.zona-item{display:flex;align-items:center;gap:10px}
+.zona-nombre{font-size:13px;font-weight:500;width:120px;flex-shrink:0}
+.zona-bar-wrap{flex:1;height:8px;background:rgba(240,238,233,.06);border-radius:4px;overflow:hidden}
+.zona-bar{height:100%;border-radius:4px;background:var(--azul)}
+.zona-num{font-size:12px;font-family:'DM Mono',monospace;color:var(--blanco-d);width:32px;text-align:right}
+
+/* ── TABLA PROSPECTOS ── */
+.prosp-tabla th,.prosp-tabla td{padding:10px 12px}
+.prosp-tabla th{background:rgba(240,238,233,.03)}
+.prosp-nombre{font-weight:600;font-size:13px}
+.prosp-tipo{font-size:11px;color:var(--blanco-d)}
+.tag{padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace}
+
+/* ── FILTROS ── */
+.filtros-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filtro-select{background:var(--negro-c);border:1px solid rgba(240,238,233,.1);border-radius:6px;padding:7px 12px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:12px;outline:none;cursor:pointer}
+.filtro-select:focus{border-color:var(--azul)}
+.search-bar{flex:1;background:var(--negro-c);border:1px solid rgba(240,238,233,.1);border-radius:6px;padding:7px 12px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:12px;outline:none;min-width:180px}
+.search-bar:focus{border-color:var(--azul)}
+.search-bar::placeholder{color:rgba(240,238,233,.3)}
+
+/* ── CONFIGURACIÓN ── */
+.config-section{margin-bottom:32px}
+.config-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(240,238,233,.08)}
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.config-grid{grid-template-columns:1fr}}
+.config-field{display:flex;flex-direction:column;gap:6px}
+.config-label{font-size:11px;font-weight:600;color:var(--blanco-d);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace}
+.config-input{background:var(--negro-c);border:1.5px solid rgba(240,238,233,.1);border-radius:6px;padding:10px 12px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.config-input:focus{border-color:var(--azul)}
+.config-vendedor-list{display:flex;flex-direction:column;gap:8px}
+.config-vend-item{display:flex;align-items:center;gap:10px;background:var(--negro-c);border:1px solid rgba(240,238,233,.08);border-radius:6px;padding:10px 14px}
+.config-vend-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;flex-shrink:0}
+.config-vend-info{flex:1}
+.config-vend-nombre{font-size:13px;font-weight:600}
+.config-vend-zona{font-size:11px;color:var(--blanco-d)}
+.btn-vend-edit{background:none;border:1px solid rgba(240,238,233,.12);border-radius:4px;color:var(--blanco-d);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+.btn-vend-edit:hover{border-color:var(--azul);color:var(--azul)}
+.btn-guardar{background:var(--azul);color:var(--blanco);border:none;border-radius:6px;padding:11px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s;margin-top:8px}
+.btn-guardar:hover{background:var(--azul-l)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--negro-m);border:1px solid var(--verde);border-radius:6px;padding:10px 18px;font-size:12px;font-weight:600;color:var(--blanco);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* CHART CONTAINER */
+.chart-wrap{position:relative;height:220px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <a href="#">Prospect<span>AI</span></a>
+    <div class="sidebar-logo-sub">PANEL DE ADMIN</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" onclick="setVista('dashboard',this)">
+      <span class="nav-ico">📊</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="setVista('vendedores',this)">
+      <span class="nav-ico">👥</span> Vendedores
+    </button>
+    <button class="nav-item" onclick="setVista('prospectos',this)">
+      <span class="nav-ico">🎯</span> Prospectos
+    </button>
+    <div class="nav-section">Análisis</div>
+    <button class="nav-item" onclick="setVista('reportes',this)">
+      <span class="nav-ico">📈</span> Reportes
+    </button>
+    <button class="nav-item" onclick="setVista('zonas',this)">
+      <span class="nav-ico">🗺️</span> Zonas
+    </button>
+    <div class="nav-section">Sistema</div>
+    <button class="nav-item" onclick="setVista('config',this)">
+      <span class="nav-ico">⚙️</span> Configuración
+    </button>
+    <button class="nav-item" onclick="window.location.href='index.html'">
+      <span class="nav-ico">🔍</span> Ir al Prospector
+    </button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-pill">
+      <div class="user-avatar">AP</div>
+      <div>
+        <div class="user-name">Alejo Paz</div>
+        <div class="user-role">Administrador</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <div class="topbar-badge" id="fecha-badge">Cargando…</div>
+      <button class="btn-nuevo" onclick="mostrarToast('✓ Datos actualizados')">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="vista active" id="vista-dashboard">
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card azul">
+          <div class="kpi-ico">🎯</div>
+          <div class="kpi-label">Prospectos este mes</div>
+          <div class="kpi-num" style="color:var(--azul-xl)">284</div>
+          <div class="kpi-change up">▲ 23% vs mes anterior</div>
+        </div>
+        <div class="kpi-card verde">
+          <div class="kpi-ico">✅</div>
+          <div class="kpi-label">Ventas cerradas</div>
+          <div class="kpi-num" style="color:var(--verde)">47</div>
+          <div class="kpi-change up">▲ 18% vs mes anterior</div>
+        </div>
+        <div class="kpi-card naranja">
+          <div class="kpi-ico">💬</div>
+          <div class="kpi-label">Mensajes enviados</div>
+          <div class="kpi-num" style="color:var(--naranja)">631</div>
+          <div class="kpi-change up">▲ 41% vs mes anterior</div>
+        </div>
+        <div class="kpi-card morado">
+          <div class="kpi-ico">📊</div>
+          <div class="kpi-label">Tasa de conversión</div>
+          <div class="kpi-num" style="color:var(--morado)">16<span style="font-size:20px">%</span></div>
+          <div class="kpi-change up">▲ 3pts vs mes anterior</div>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS FILA 1 -->
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">Prospectos por semana</div>
+          <div class="panel-sub">Últimas 8 semanas</div>
+          <div class="chart-wrap">
+            <canvas id="chartSemanas"></canvas>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Estado del pipeline</div>
+          <div class="panel-sub">Distribución actual</div>
+          <div class="chart-wrap">
+            <canvas id="chartPipeline"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS FILA 2 -->
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-title">Ranking de vendedores</div>
+          <div class="panel-sub">Cierres este mes</div>
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vendedor</th>
+                <th>Prospectos</th>
+                <th>Cierres</th>
+                <th>Conv.</th>
+              </tr>
+            </thead>
+            <tbody id="ranking-tabla"></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Actividad reciente</div>
+          <div class="panel-sub">Últimas acciones</div>
+          <div class="actividad-list" id="actividad-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VENDEDORES ══ -->
+    <div class="vista" id="vista-vendedores">
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-card azul">
+          <div class="kpi-label">Vendedores activos</div>
+          <div class="kpi-num" style="color:var(--azul-xl)">4</div>
+        </div>
+        <div class="kpi-card verde">
+          <div class="kpi-label">Promedio cierres</div>
+          <div class="kpi-num" style="color:var(--verde)">11.7</div>
+        </div>
+        <div class="kpi-card naranja">
+          <div class="kpi-label">Mejor vendedor</div>
+          <div class="kpi-num" style="color:var(--naranja);font-size:22px">Lucas M.</div>
+        </div>
+        <div class="kpi-card morado">
+          <div class="kpi-label">Total mensajes</div>
+          <div class="kpi-num" style="color:var(--morado)">631</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Equipo de ventas</div>
+        <div class="panel-sub">Rendimiento individual del mes</div>
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>Zona asignada</th>
+              <th>Prospectos</th>
+              <th>Progreso</th>
+              <th>Cierres</th>
+              <th>Conv.</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="vendedores-tabla"></tbody>
+        </table>
+      </div>
+      <div style="height:16px"></div>
+      <div class="panel">
+        <div class="panel-title">Comparativa mensual</div>
+        <div class="panel-sub">Prospectos contactados por vendedor</div>
+        <div class="chart-wrap">
+          <canvas id="chartVendedores"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PROSPECTOS ══ -->
+    <div class="vista" id="vista-prospectos">
+      <div class="filtros-row">
+        <input type="text" class="search-bar" placeholder="🔍 Buscar prospecto…" oninput="filtrarProspectos(this.value)">
+        <select class="filtro-select" onchange="filtrarPorEstado(this.value)">
+          <option value="todos">Todos los estados</option>
+          <option value="nuevo">🆕 Nuevos</option>
+          <option value="interesado">✅ Interesados</option>
+          <option value="seguimiento">🔄 Seguimiento</option>
+          <option value="cerrado">🏆 Cerrados</option>
+          <option value="no_interesa">❌ No interesa</option>
+        </select>
+        <select class="filtro-select">
+          <option>Todos los vendedores</option>
+          <option>Lucas M.</option>
+          <option>Carla R.</option>
+          <option>Martín G.</option>
+          <option>Ana P.</option>
+        </select>
+        <select class="filtro-select">
+          <option>Todos los tipos</option>
+          <option>Ferretería</option>
+          <option>Mayorista</option>
+          <option>Distribuidor</option>
+          <option>Construcción</option>
+        </select>
+      </div>
+      <div class="panel" style="padding:0;overflow:hidden">
+        <table class="tabla prosp-tabla" style="width:100%">
+          <thead>
+            <tr>
+              <th>Prospecto</th>
+              <th>Tipo</th>
+              <th>Zona</th>
+              <th>Vendedor</th>
+              <th>Estado</th>
+              <th>Potencial</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="prospectos-tabla"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ REPORTES ══ -->
+    <div class="vista" id="vista-reportes">
+      <div class="kpi-grid">
+        <div class="kpi-card azul">
+          <div class="kpi-label">Ingresos proyectados</div>
+          <div class="kpi-num" style="color:var(--azul-xl);font-size:28px">USD 4.200</div>
+          <div class="kpi-change up">▲ 35% vs mes anterior</div>
+        </div>
+        <div class="kpi-card verde">
+          <div class="kpi-label">Tasa de apertura WA</div>
+          <div class="kpi-num" style="color:var(--verde)">74<span style="font-size:20px">%</span></div>
+          <div class="kpi-change up">▲ 8pts vs mes anterior</div>
+        </div>
+        <div class="kpi-card naranja">
+          <div class="kpi-label">Tiempo prom. de cierre</div>
+          <div class="kpi-num" style="color:var(--naranja)">4.2<span style="font-size:20px">d</span></div>
+          <div class="kpi-change down">▼ 1d mejor que antes</div>
+        </div>
+        <div class="kpi-card morado">
+          <div class="kpi-label">NPS del sistema</div>
+          <div class="kpi-num" style="color:var(--morado)">87</div>
+          <div class="kpi-change up">▲ 12pts</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">Evolución mensual</div>
+          <div class="panel-sub">Prospectos vs Cierres — últimos 6 meses</div>
+          <div class="chart-wrap">
+            <canvas id="chartEvolucion"></canvas>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Conversión por tipo de negocio</div>
+          <div class="panel-sub">% de cierre según rubro</div>
+          <div class="chart-wrap">
+            <canvas id="chartConversion"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Rendimiento de mensajes</div>
+        <div class="panel-sub">Respuesta por tipo de mensaje enviado</div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="chartMensajes"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ZONAS ══ -->
+    <div class="vista" id="vista-zonas">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">Top zonas por prospectos</div>
+          <div class="panel-sub">Cantidad de prospectos encontrados por zona</div>
+          <div style="height:16px"></div>
+          <div class="zona-list" id="zona-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Distribución por zona</div>
+          <div class="panel-sub">% del total de prospectos</div>
+          <div class="chart-wrap">
+            <canvas id="chartZonas"></canvas>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="panel">
+        <div class="panel-title">Tasa de conversión por zona</div>
+        <div class="panel-sub">Qué zonas convierten mejor</div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="chartZonasConv"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIGURACIÓN ══ -->
+    <div class="vista" id="vista-config">
+      <div class="grid-2">
+        <div>
+          <div class="panel config-section">
+            <div class="config-title">Datos de la empresa</div>
+            <div class="config-grid">
+              <div class="config-field">
+                <div class="config-label">Nombre de la empresa</div>
+                <input class="config-input" type="text" value="FerreMax" id="cfg-empresa">
+              </div>
+              <div class="config-field">
+                <div class="config-label">Rubro</div>
+                <input class="config-input" type="text" value="Ferreterías / Herramientas">
+              </div>
+              <div class="config-field">
+                <div class="config-label">WhatsApp de contacto</div>
+                <input class="config-input" type="text" value="+54 9 3564-380108">
+              </div>
+              <div class="config-field">
+                <div class="config-label">Email</div>
+                <input class="config-input" type="email" value="ventas@ferremax.com.ar">
+              </div>
+            </div>
+            <button class="btn-guardar" onclick="mostrarToast('✓ Datos guardados correctamente')">Guardar cambios</button>
+          </div>
+
+          <div class="panel">
+            <div class="config-title">Mensaje por defecto (WhatsApp)</div>
+            <textarea class="config-input" rows="5" style="width:100%;resize:vertical">🔧 ¡Hola! Te contacto de *FerreMax*, importadores exclusivos de *Luqstoff* 🇩🇪.
+
+Tenemos lubricantes, selladores y adhesivos técnicos de primera calidad. ¿Puedo enviarte nuestro catálogo y precios?</textarea>
+            <button class="btn-guardar" onclick="mostrarToast('✓ Mensaje guardado')">Guardar mensaje</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel config-section">
+            <div class="config-title">Equipo de vendedores</div>
+            <div class="config-vendedor-list" id="config-vendedores"></div>
+            <button class="btn-guardar" style="margin-top:16px;background:var(--negro-c);border:1px solid rgba(240,238,233,.12)" onclick="mostrarToast('✓ Vendedor agregado')">+ Agregar vendedor</button>
+          </div>
+
+          <div class="panel">
+            <div class="config-title">Notificaciones</div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer">
+                <span>Nuevo prospecto asignado</span>
+                <input type="checkbox" checked style="accent-color:var(--azul);width:16px;height:16px">
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer">
+                <span>Venta cerrada</span>
+                <input type="checkbox" checked style="accent-color:var(--azul);width:16px;height:16px">
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer">
+                <span>Reporte semanal</span>
+                <input type="checkbox" checked style="accent-color:var(--azul);width:16px;height:16px">
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer">
+                <span>Alertas de inactividad</span>
+                <input type="checkbox" style="accent-color:var(--azul);width:16px;height:16px">
+              </label>
+            </div>
+            <button class="btn-guardar" onclick="mostrarToast('✓ Notificaciones guardadas')" style="margin-top:20px">Guardar preferencias</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATOS DEMO ──
+const VENDEDORES = [
+  {nombre:'Lucas M.',zona:'Palermo / Belgrano',prospectos:84,cierres:19,color:'#2563EB',ini:'LM'},
+  {nombre:'Carla R.',zona:'La Matanza / Merlo',prospectos:71,cierres:14,color:'#22C55E',ini:'CR'},
+  {nombre:'Martín G.',zona:'Quilmes / Avellaneda',prospectos:68,cierres:9,color:'#F59E0B',ini:'MG'},
+  {nombre:'Ana P.',zona:'Lanús / Lomas',prospectos:61,cierres:5,color:'#8B5CF6',ini:'AP'},
+];
+
+const PROSPECTOS_DEMO = [
+  {nombre:'Ferretería Don Armando',tipo:'ferretería',zona:'Palermo',vendedor:'Lucas M.',estado:'interesado',potencial:'alto',fecha:'28/07'},
+  {nombre:'Mayorista Flores Centro',tipo:'mayorista',zona:'Flores',vendedor:'Carla R.',estado:'seguimiento',potencial:'alto',fecha:'27/07'},
+  {nombre:'Distribuidora San Justo',tipo:'distribuidor',zona:'La Matanza',vendedor:'Carla R.',estado:'cerrado',potencial:'alto',fecha:'26/07'},
+  {nombre:'Pinturas El Pincel',tipo:'pinturería',zona:'Flores',vendedor:'Lucas M.',estado:'nuevo',potencial:'medio',fecha:'26/07'},
+  {nombre:'Ferretería Central Quilmes',tipo:'ferretería',zona:'Quilmes',vendedor:'Martín G.',estado:'interesado',potencial:'alto',fecha:'25/07'},
+  {nombre:'Construmax Palermo',tipo:'construcción',zona:'Palermo',vendedor:'Lucas M.',estado:'no_interesa',potencial:'medio',fecha:'25/07'},
+  {nombre:'Mayorista Industrial Avellaneda',tipo:'mayorista',zona:'Avellaneda',vendedor:'Martín G.',estado:'cerrado',potencial:'alto',fecha:'24/07'},
+  {nombre:'Ferretería La Tuerca',tipo:'ferretería',zona:'Avellaneda',vendedor:'Martín G.',estado:'seguimiento',potencial:'alto',fecha:'24/07'},
+  {nombre:'Distribuidora Lomas Norte',tipo:'distribuidor',zona:'Lomas',vendedor:'Ana P.',estado:'nuevo',potencial:'medio',fecha:'23/07'},
+  {nombre:'Ferroteria El Maestro',tipo:'ferretería',zona:'Villa Urquiza',vendedor:'Lucas M.',estado:'cerrado',potencial:'alto',fecha:'23/07'},
+  {nombre:'Distribuidora Sur GBA',tipo:'distribuidor',zona:'Quilmes',vendedor:'Martín G.',estado:'interesado',potencial:'alto',fecha:'22/07'},
+  {nombre:'Materiales Construir',tipo:'construcción',zona:'Morón',vendedor:'Ana P.',estado:'nuevo',potencial:'bajo',fecha:'22/07'},
+];
+
+const ACTIVIDAD = [
+  {color:'#22C55E',texto:'<strong>Lucas M.</strong> cerró venta con Ferretería El Maestro',tiempo:'Hace 2 horas'},
+  {color:'#2563EB',texto:'<strong>Carla R.</strong> asignó 5 nuevos prospectos en La Matanza',tiempo:'Hace 3 horas'},
+  {color:'#F59E0B',texto:'<strong>Martín G.</strong> generó mensaje para Mayorista Avellaneda',tiempo:'Hace 5 horas'},
+  {color:'#8B5CF6',texto:'<strong>Ana P.</strong> cambió estado de 3 prospectos a Seguimiento',tiempo:'Hace 6 horas'},
+  {color:'#22C55E',texto:'<strong>Lucas M.</strong> contactó por WA a Distribuidora Palermo Norte',tiempo:'Ayer 18:30'},
+  {color:'#EF4444',texto:'<strong>Carla R.</strong> marcó Pinturas El Pincel como No interesa',tiempo:'Ayer 16:00'},
+];
+
+const ZONAS = [
+  {nombre:'Palermo',prospectos:84,conv:22},
+  {nombre:'La Matanza',prospectos:71,conv:18},
+  {nombre:'Quilmes',prospectos:58,conv:15},
+  {nombre:'Avellaneda',prospectos:45,conv:20},
+  {nombre:'Flores',prospectos:38,conv:12},
+  {nombre:'Lomas de Zamora',prospectos:29,conv:9},
+  {nombre:'Lanús',prospectos:24,conv:17},
+  {nombre:'Morón',prospectos:18,conv:8},
+];
+
+// ── FECHA ──
+const ahora = new Date();
+document.getElementById('fecha-badge').textContent =
+  ahora.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+
+// ── NAVEGACIÓN ──
+const TITULOS = {
+  dashboard:'Dashboard',vendedores:'Vendedores',prospectos:'Prospectos',
+  reportes:'Reportes y Estadísticas',zonas:'Análisis por Zona',config:'Configuración'
+};
+
+function setVista(id, btn) {
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('vista-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = TITULOS[id]||id;
+
+  // Inicializar gráficos lazy
+  if(id==='dashboard') initDashboard();
+  if(id==='vendedores') initVendedores();
+  if(id==='reportes') initReportes();
+  if(id==='zonas') initZonas();
+  if(id==='prospectos') renderProspectos(PROSPECTOS_DEMO);
+  if(id==='config') renderConfig();
+}
+
+// ── DASHBOARD ──
+let dashInited = false;
+function initDashboard() {
+  if(dashInited) return; dashInited=true;
+
+  // Ranking
+  const tbody = document.getElementById('ranking-tabla');
+  VENDEDORES.sort((a,b)=>b.cierres-a.cierres).forEach((v,i)=>{
+    const conv = Math.round(v.cierres/v.prospectos*100);
+    tbody.innerHTML += `<tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--blanco-d);font-size:12px">${i+1}</span></td>
+      <td><div class="vend-info"><div class="vend-avatar" style="background:${v.color}">${v.ini}</div><div><div class="vend-nombre">${v.nombre}</div></div></div></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:13px">${v.prospectos}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--verde)">${v.cierres}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:13px">${conv}%</span></td>
+    </tr>`;
+  });
+
+  // Actividad
+  const act = document.getElementById('actividad-list');
+  ACTIVIDAD.forEach(a=>{
+    act.innerHTML += `<div class="act-item"><div class="act-dot" style="background:${a.color}"></div><div class="act-info"><div class="act-texto">${a.texto}</div><div class="act-tiempo">${a.tiempo}</div></div></div>`;
+  });
+
+  // Chart semanas
+  new Chart(document.getElementById('chartSemanas'),{
+    type:'bar',
+    data:{
+      labels:['S1','S2','S3','S4','S5','S6','S7','S8'],
+      datasets:[{
+        label:'Prospectos',
+        data:[28,35,42,38,51,47,62,71],
+        backgroundColor:'rgba(37,99,235,.6)',
+        borderColor:'#2563EB',
+        borderWidth:1,
+        borderRadius:4,
+      },{
+        label:'Cierres',
+        data:[4,6,8,7,9,8,11,13],
+        backgroundColor:'rgba(34,197,94,.5)',
+        borderColor:'#22C55E',
+        borderWidth:1,
+        borderRadius:4,
+      }]
+    },
+    options:chartOpts()
+  });
+
+  // Chart pipeline (donut)
+  new Chart(document.getElementById('chartPipeline'),{
+    type:'doughnut',
+    data:{
+      labels:['Nuevos','Interesados','Seguimiento','Cerrados','No interesa'],
+      datasets:[{
+        data:[82,54,38,47,63],
+        backgroundColor:['#4A5568','#2563EB','#F59E0B','#22C55E','#EF4444'],
+        borderWidth:0,
+        hoverOffset:8
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#9CA3AF',font:{size:11},boxWidth:12,padding:12}}}
+    }
+  });
+}
+
+// ── VENDEDORES ──
+let vendInited = false;
+function initVendedores() {
+  if(vendInited) return; vendInited=true;
+  const tbody = document.getElementById('vendedores-tabla');
+  const maxProsp = Math.max(...VENDEDORES.map(v=>v.prospectos));
+  VENDEDORES.forEach(v=>{
+    const conv = Math.round(v.cierres/v.prospectos*100);
+    const pct = Math.round(v.prospectos/maxProsp*100);
+    tbody.innerHTML += `<tr>
+      <td><div class="vend-info"><div class="vend-avatar" style="background:${v.color}">${v.ini}</div><div><div class="vend-nombre">${v.nombre}</div><div class="vend-zona">${v.zona}</div></div></div></td>
+      <td><span style="font-size:12px;color:var(--blanco-d)">${v.zona}</span></td>
+      <td><span style="font-family:'DM Mono',monospace">${v.prospectos}</span></td>
+      <td><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${v.color}"></div></div><div class="progress-num">${pct}%</div></div></td>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--verde);font-weight:600">${v.cierres}</span></td>
+      <td><span style="font-family:'DM Mono',monospace">${conv}%</span></td>
+      <td><span class="estado-badge" style="background:rgba(34,197,94,.12);color:#22C55E">Activo</span></td>
+    </tr>`;
+  });
+
+  new Chart(document.getElementById('chartVendedores'),{
+    type:'bar',
+    data:{
+      labels:VENDEDORES.map(v=>v.nombre),
+      datasets:[
+        {label:'Prospectos',data:VENDEDORES.map(v=>v.prospectos),backgroundColor:'rgba(37,99,235,.6)',borderColor:'#2563EB',borderWidth:1,borderRadius:4},
+        {label:'Cierres',data:VENDEDORES.map(v=>v.cierres),backgroundColor:'rgba(34,197,94,.5)',borderColor:'#22C55E',borderWidth:1,borderRadius:4}
+      ]
+    },
+    options:chartOpts()
+  });
+}
+
+// ── PROSPECTOS ──
+const EC={nuevo:'#4A5568',interesado:'#2563EB',seguimiento:'#F59E0B',cerrado:'#22C55E',no_interesa:'#EF4444'};
+const EL={nuevo:'🆕 Nuevo',interesado:'✅ Interesado',seguimiento:'🔄 Seguimiento',cerrado:'🏆 Cerrado',no_interesa:'❌ No interesa'};
+const PC={alto:'#22C55E',medio:'#F59E0B',bajo:'#EF4444'};
+
+function renderProspectos(data) {
+  const tbody = document.getElementById('prospectos-tabla');
+  tbody.innerHTML = data.map(p=>`<tr>
+    <td><div class="prosp-nombre">${p.nombre}</div></td>
+    <td><span class="tag" style="background:rgba(37,99,235,.12);color:var(--azul-xl)">${p.tipo.toUpperCase()}</span></td>
+    <td><span style="font-size:12px;color:var(--blanco-d)">${p.zona}</span></td>
+    <td><span style="font-size:12px">${p.vendedor}</span></td>
+    <td><span class="tag" style="background:${EC[p.estado]}20;color:${EC[p.estado]}">${EL[p.estado]}</span></td>
+    <td><span class="tag" style="background:${PC[p.potencial]}20;color:${PC[p.potencial]}">● ${p.potencial.toUpperCase()}</span></td>
+    <td><span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--blanco-d)">${p.fecha}</span></td>
+  </tr>`).join('');
+}
+
+function filtrarProspectos(q) {
+  const filtrados = PROSPECTOS_DEMO.filter(p=>
+    p.nombre.toLowerCase().includes(q.toLowerCase()) ||
+    p.zona.toLowerCase().includes(q.toLowerCase()) ||
+    p.vendedor.toLowerCase().includes(q.toLowerCase())
+  );
+  renderProspectos(filtrados);
+}
+
+function filtrarPorEstado(e) {
+  renderProspectos(e==='todos' ? PROSPECTOS_DEMO : PROSPECTOS_DEMO.filter(p=>p.estado===e));
+}
+
+// ── REPORTES ──
+let repInited = false;
+function initReportes() {
+  if(repInited) return; repInited=true;
+
+  new Chart(document.getElementById('chartEvolucion'),{
+    type:'line',
+    data:{
+      labels:['Feb','Mar','Abr','May','Jun','Jul'],
+      datasets:[
+        {label:'Prospectos',data:[142,168,195,221,258,284],borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.1)',tension:.4,fill:true,pointBackgroundColor:'#2563EB',pointRadius:4},
+        {label:'Cierres',data:[21,28,34,39,42,47],borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.1)',tension:.4,fill:true,pointBackgroundColor:'#22C55E',pointRadius:4}
+      ]
+    },
+    options:chartOpts()
+  });
+
+  new Chart(document.getElementById('chartConversion'),{
+    type:'bar',
+    data:{
+      labels:['Ferretería','Mayorista','Distribuidor','Construcción','Pinturería'],
+      datasets:[{
+        label:'% Conversión',
+        data:[22,18,15,10,8],
+        backgroundColor:['#2563EB','#22C55E','#F59E0B','#8B5CF6','#EF4444'],
+        borderRadius:4,
+      }]
+    },
+    options:{...chartOpts(),indexAxis:'y'}
+  });
+
+  new Chart(document.getElementById('chartMensajes'),{
+    type:'bar',
+    data:{
+      labels:['WhatsApp','Email','Guía vendedor'],
+      datasets:[
+        {label:'Enviados',data:[421,156,54],backgroundColor:'rgba(37,99,235,.5)',borderRadius:3},
+        {label:'Con respuesta',data:[312,89,38],backgroundColor:'rgba(34,197,94,.5)',borderRadius:3}
+      ]
+    },
+    options:chartOpts()
+  });
+}
+
+// ── ZONAS ──
+let zonasInited = false;
+function initZonas() {
+  if(zonasInited) return; zonasInited=true;
+  const max = Math.max(...ZONAS.map(z=>z.prospectos));
+  const zl = document.getElementById('zona-list');
+  ZONAS.forEach(z=>{
+    const pct = Math.round(z.prospectos/max*100);
+    zl.innerHTML += `<div class="zona-item">
+      <div class="zona-nombre">${z.nombre}</div>
+      <div class="zona-bar-wrap"><div class="zona-bar" style="width:${pct}%"></div></div>
+      <div class="zona-num">${z.prospectos}</div>
+    </div>`;
+  });
+
+  new Chart(document.getElementById('chartZonas'),{
+    type:'doughnut',
+    data:{
+      labels:ZONAS.map(z=>z.nombre),
+      datasets:[{
+        data:ZONAS.map(z=>z.prospectos),
+        backgroundColor:['#2563EB','#22C55E','#F59E0B','#8B5CF6','#EF4444','#06B6D4','#EC4899','#84CC16'],
+        borderWidth:0,hoverOffset:8
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#9CA3AF',font:{size:11},boxWidth:12,padding:10}}}}
+  });
+
+  new Chart(document.getElementById('chartZonasConv'),{
+    type:'bar',
+    data:{
+      labels:ZONAS.map(z=>z.nombre),
+      datasets:[{
+        label:'% Conversión',
+        data:ZONAS.map(z=>z.conv),
+        backgroundColor:'rgba(37,99,235,.6)',borderColor:'#2563EB',borderWidth:1,borderRadius:4
+      }]
+    },
+    options:chartOpts()
+  });
+}
+
+// ── CONFIG ──
+function renderConfig() {
+  const list = document.getElementById('config-vendedores');
+  if(list.innerHTML) return;
+  VENDEDORES.forEach(v=>{
+    list.innerHTML += `<div class="config-vend-item">
+      <div class="config-vend-avatar" style="background:${v.color}">${v.ini}</div>
+      <div class="config-vend-info">
+        <div class="config-vend-nombre">${v.nombre}</div>
+        <div class="config-vend-zona">${v.zona}</div>
+      </div>
+      <button class="btn-vend-edit" onclick="mostrarToast('✓ Editando ${v.nombre}')">Editar</button>
+    </div>`;
+  });
+}
+
+// ── CHART OPTIONS BASE ──
+function chartOpts(){
+  return{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#9CA3AF',font:{size:11},boxWidth:12}}},
+    scales:{
+      x:{ticks:{color:'#6B7280',font:{size:11}},grid:{color:'rgba(240,238,233,.04)'},border:{color:'transparent'}},
+      y:{ticks:{color:'#6B7280',font:{size:11}},grid:{color:'rgba(240,238,233,.04)'},border:{color:'transparent'}}
+    }
+  };
+}
+
+// ── TOAST ──
+function mostrarToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Init
+initDashboard();
+</script>
+</body>
+</html>

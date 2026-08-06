@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProspectAI — CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#111318;--negro-m:#1C1F26;--negro-c:#252830;--negro-b:#2A2D35;
+  --blanco:#F0EEE9;--blanco-d:#9CA3AF;
+  --azul:#2563EB;--azul-l:#3B82F6;--azul-xl:#93C5FD;
+  --verde:#22C55E;--rojo:#EF4444;--naranja:#F59E0B;--morado:#8B5CF6;--cyan:#06B6D4;
+}
+body{font-family:'Inter',sans-serif;background:var(--negro);color:var(--blanco);min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--negro-m);border-bottom:1px solid rgba(240,238,233,.06);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:800;font-size:18px}
+.topbar-title span{color:var(--azul)}
+.view-tabs{display:flex;gap:4px;background:var(--negro-c);border-radius:6px;padding:3px}
+.view-tab{padding:5px 14px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--blanco-d);font-family:'Inter',sans-serif;transition:all .15s}
+.view-tab.active{background:var(--negro-m);color:var(--blanco);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.search-bar{background:var(--negro-c);border:1px solid rgba(240,238,233,.08);border-radius:6px;padding:6px 12px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:12px;outline:none;width:200px;transition:all .2s}
+.search-bar::placeholder{color:rgba(240,238,233,.3)}
+.search-bar:focus{border-color:var(--azul);width:240px}
+.filtro-select{background:var(--negro-c);border:1px solid rgba(240,238,233,.08);border-radius:6px;padding:6px 10px;color:var(--blanco-d);font-family:'Inter',sans-serif;font-size:12px;outline:none;cursor:pointer}
+.btn-nuevo{background:var(--azul);color:var(--blanco);border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s;display:flex;align-items:center;gap:6px}
+.btn-nuevo:hover{background:var(--azul-l)}
+
+/* ── STATS BAR ── */
+.stats-bar{background:var(--negro-m);border-bottom:1px solid rgba(240,238,233,.06);padding:10px 24px;display:flex;gap:24px;overflow-x:auto;flex-shrink:0}
+.stats-bar::-webkit-scrollbar{height:0}
+.stat-item{display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0}
+.stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.stat-label{font-size:11px;color:var(--blanco-d)}
+.stat-num{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.stat-sep{width:1px;background:rgba(240,238,233,.08);align-self:stretch}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── VISTA KANBAN ── */
+.kanban{display:flex;gap:12px;padding:16px 20px;overflow-x:auto;flex:1;align-items:flex-start}
+.kanban::-webkit-scrollbar{height:6px}
+.kanban::-webkit-scrollbar-thumb{background:var(--negro-b);border-radius:3px}
+
+.col{flex-shrink:0;width:260px;display:flex;flex-direction:column;gap:0}
+.col-header{padding:10px 14px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.col-titulo{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+.col-count{font-size:10px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:10px;background:rgba(240,238,233,.1);color:var(--blanco-d)}
+.col-valor{font-size:10px;color:var(--blanco-d);font-family:'DM Mono',monospace}
+.col-cards{display:flex;flex-direction:column;gap:8px;min-height:80px}
+
+/* CARDS */
+.card{background:var(--negro-m);border:1px solid rgba(240,238,233,.08);border-radius:8px;padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.card:hover{border-color:rgba(240,238,233,.18);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+.card.c-azul::before{background:var(--azul)}
+.card.c-cyan::before{background:var(--cyan)}
+.card.c-naranja::before{background:var(--naranja)}
+.card.c-morado::before{background:var(--morado)}
+.card.c-verde::before{background:var(--verde)}
+.card.c-rojo::before{background:var(--rojo)}
+
+.card-nombre{font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.3}
+.card-empresa{font-size:11px;color:var(--blanco-d);margin-bottom:8px}
+.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.card-tag{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600;font-family:'DM Mono',monospace}
+.card-footer{display:flex;justify-content:space-between;align-items:center}
+.card-vend{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--blanco-d)}
+.card-avatar{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;font-family:'Syne',sans-serif}
+.card-fecha{font-size:10px;color:rgba(240,238,233,.3);font-family:'DM Mono',monospace}
+.card-valor{font-size:12px;font-weight:700;font-family:'Syne',sans-serif;color:var(--verde)}
+.card-potencial{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+
+/* ADD CARD BTN */
+.btn-add-card{background:transparent;border:1.5px dashed rgba(240,238,233,.1);border-radius:8px;padding:10px;color:rgba(240,238,233,.3);font-size:12px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;transition:all .2s;margin-top:4px}
+.btn-add-card:hover{border-color:var(--azul);color:var(--azul)}
+
+/* ── VISTA LISTA ── */
+.lista-view{flex:1;overflow-y:auto;padding:16px 20px}
+.lista-view::-webkit-scrollbar{width:4px}
+.lista-view::-webkit-scrollbar-thumb{background:var(--negro-b);border-radius:2px}
+.lista-tabla{width:100%;border-collapse:collapse}
+.lista-tabla th{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blanco-d);font-family:'DM Mono',monospace;padding:8px 12px;text-align:left;border-bottom:1px solid rgba(240,238,233,.06);background:var(--negro-m);position:sticky;top:0;z-index:10}
+.lista-tabla td{padding:10px 12px;border-bottom:1px solid rgba(240,238,233,.04);font-size:13px;vertical-align:middle}
+.lista-tabla tr:hover td{background:rgba(240,238,233,.02);cursor:pointer}
+.cl-nombre{font-weight:600}
+.cl-sub{font-size:11px;color:var(--blanco-d);margin-top:1px}
+
+/* ── MODAL FICHA ── */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:500;display:none;align-items:flex-start;justify-content:flex-end;padding:0}
+.modal-overlay.open{display:flex}
+.modal{background:var(--negro-m);width:480px;height:100vh;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.5);border-left:1px solid rgba(240,238,233,.08);overflow:hidden;animation:slideIn .25s ease}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:600px){.modal{width:100vw}}
+
+.modal-top{padding:20px 24px;border-bottom:1px solid rgba(240,238,233,.06);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
+.modal-eyebrow{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--azul-xl);font-family:'DM Mono',monospace;margin-bottom:6px}
+.modal-nombre{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;line-height:1.1;margin-bottom:4px}
+.modal-empresa{font-size:13px;color:var(--blanco-d)}
+.modal-close{background:none;border:none;color:var(--blanco-d);cursor:pointer;font-size:20px;padding:0;line-height:1;flex-shrink:0;transition:color .15s}
+.modal-close:hover{color:var(--blanco)}
+
+.modal-etapa-bar{padding:12px 24px;border-bottom:1px solid rgba(240,238,233,.06);flex-shrink:0}
+.etapa-steps{display:flex;align-items:center;gap:0}
+.etapa-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;position:relative}
+.etapa-step::after{content:'';position:absolute;top:10px;left:50%;right:-50%;height:2px;background:rgba(240,238,233,.08);z-index:0}
+.etapa-step:last-child::after{display:none}
+.etapa-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(240,238,233,.15);background:var(--negro-m);display:flex;align-items:center;justify-content:center;font-size:8px;z-index:1;transition:all .2s;position:relative}
+.etapa-step.done .etapa-dot{background:var(--verde);border-color:var(--verde);color:white}
+.etapa-step.active .etapa-dot{background:var(--azul);border-color:var(--azul);color:white}
+.etapa-step.active .etapa-dot::after{content:'';position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;border:2px solid rgba(37,99,235,.3);border-radius:50%}
+.etapa-lbl{font-size:9px;color:var(--blanco-d);font-family:'DM Mono',monospace;text-align:center;letter-spacing:.04em}
+.etapa-step.active .etapa-lbl{color:var(--azul-xl)}
+.etapa-step.done .etapa-lbl{color:var(--verde)}
+
+.modal-body{flex:1;overflow-y:auto;padding:0}
+.modal-body::-webkit-scrollbar{width:3px}
+.modal-body::-webkit-scrollbar-thumb{background:var(--negro-b)}
+
+.modal-tabs{display:flex;border-bottom:1px solid rgba(240,238,233,.06);padding:0 24px;flex-shrink:0}
+.modal-tab{padding:12px 16px;font-size:12px;font-weight:600;color:var(--blanco-d);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:none;border-left:none;border-right:none;border-top:none;font-family:'Inter',sans-serif}
+.modal-tab.active{color:var(--azul-xl);border-bottom-color:var(--azul)}
+
+.tab-content{display:none;padding:20px 24px}
+.tab-content.active{display:block}
+
+/* DATOS */
+.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.dato-field{display:flex;flex-direction:column;gap:4px}
+.dato-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blanco-d);font-family:'DM Mono',monospace}
+.dato-val{font-size:13px;font-weight:500;color:var(--blanco)}
+.dato-input{background:var(--negro-c);border:1.5px solid rgba(240,238,233,.1);border-radius:6px;padding:8px 10px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;width:100%}
+.dato-input:focus{border-color:var(--azul)}
+.dato-input::placeholder{color:rgba(240,238,233,.3)}
+.dato-select{background:var(--negro-c);border:1.5px solid rgba(240,238,233,.1);border-radius:6px;padding:8px 10px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:13px;outline:none;width:100%;cursor:pointer}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:12px;padding:12px 0;position:relative}
+.tl-item::before{content:'';position:absolute;left:15px;top:32px;bottom:-12px;width:1px;background:rgba(240,238,233,.06)}
+.tl-item:last-child::before{display:none}
+.tl-ico{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;z-index:1}
+.tl-content{flex:1;min-width:0}
+.tl-titulo{font-size:13px;font-weight:500;color:var(--blanco);margin-bottom:2px}
+.tl-titulo strong{color:var(--blanco)}
+.tl-tiempo{font-size:10px;color:var(--blanco-d);font-family:'DM Mono',monospace}
+.tl-nota{font-size:12px;color:var(--blanco-d);background:var(--negro-c);border-radius:6px;padding:8px 10px;margin-top:6px;line-height:1.5}
+
+/* NOTAS */
+.nota-input-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.nota-textarea{width:100%;background:var(--negro-c);border:1.5px solid rgba(240,238,233,.1);border-radius:6px;padding:10px;color:var(--blanco);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:none;min-height:80px;line-height:1.5;transition:border-color .2s}
+.nota-textarea:focus{border-color:var(--azul)}
+.nota-textarea::placeholder{color:rgba(240,238,233,.3)}
+.nota-acciones{display:flex;gap:6px}
+.btn-nota{padding:7px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .15s}
+.btn-nota-pri{background:var(--azul);color:white}
+.btn-nota-pri:hover{background:var(--azul-l)}
+.btn-nota-sec{background:var(--negro-c);color:var(--blanco-d);border:1px solid rgba(240,238,233,.1)}
+.btn-nota-sec:hover{color:var(--blanco)}
+
+.notas-list{display:flex;flex-direction:column;gap:8px}
+.nota-item{background:var(--negro-c);border:1px solid rgba(240,238,233,.06);border-radius:6px;padding:12px}
+.nota-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.nota-autor{font-size:11px;font-weight:600;color:var(--azul-xl)}
+.nota-fecha{font-size:10px;color:var(--blanco-d);font-family:'DM Mono',monospace}
+.nota-texto{font-size:13px;color:var(--blanco-d);line-height:1.5}
+
+/* MODAL FOOTER */
+.modal-footer{padding:14px 24px;border-top:1px solid rgba(240,238,233,.06);display:flex;gap:8px;flex-shrink:0}
+.btn-accion{flex:1;padding:9px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .15s;text-align:center}
+.btn-wa{background:#25D366;color:white}
+.btn-wa:hover{background:#1EB55A}
+.btn-mail{background:var(--negro-c);color:var(--blanco);border:1px solid rgba(240,238,233,.1)}
+.btn-mail:hover{background:var(--negro-b)}
+.btn-avanzar{background:var(--azul);color:white}
+.btn-avanzar:hover{background:var(--azul-l)}
+.btn-perder{background:rgba(239,68,68,.15);color:var(--rojo);border:1px solid rgba(239,68,68,.2)}
+.btn-perder:hover{background:rgba(239,68,68,.25)}
+
+/* ── MODAL NUEVO CLIENTE ── */
+.modal-nuevo{background:var(--negro-m);border:1px solid rgba(240,238,233,.1);border-radius:12px;width:100%;max-width:500px;box-shadow:0 16px 48px rgba(0,0,0,.5);animation:popIn .2s ease}
+@keyframes popIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-nuevo-header{padding:20px 24px;border-bottom:1px solid rgba(240,238,233,.06);display:flex;justify-content:space-between;align-items:center}
+.modal-nuevo-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
+.modal-nuevo-body{padding:20px 24px;display:flex;flex-direction:column;gap:12px}
+.modal-nuevo-footer{padding:14px 24px;border-top:1px solid rgba(240,238,233,.06);display:flex;gap:8px;justify-content:flex-end}
+.modal-overlay-center{align-items:center;justify-content:center}
+.field-nuevo{display:flex;flex-direction:column;gap:5px}
+.field-nuevo-label{font-size:11px;font-weight:600;color:var(--blanco-d);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace}
+.field-nuevo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.field-nuevo-row{grid-template-columns:1fr}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--negro-m);border:1px solid var(--verde);border-radius:6px;padding:10px 18px;font-size:12px;font-weight:600;color:var(--blanco);z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* EMPTY STATE */
+.col-empty{padding:20px 14px;text-align:center;color:rgba(240,238,233,.2);font-size:12px;border:1.5px dashed rgba(240,238,233,.06);border-radius:8px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-title">Prospect<span>AI</span> — CRM</div>
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="setVista('kanban',this)">⬛ Pipeline</button>
+      <button class="view-tab" onclick="setVista('lista',this)">☰ Lista</button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <input type="text" class="search-bar" placeholder="🔍 Buscar cliente…" oninput="filtrarClientes(this.value)">
+    <select class="filtro-select" onchange="filtrarPorVendedor(this.value)">
+      <option value="todos">Todos los vendedores</option>
+      <option>Lucas M.</option>
+      <option>Carla R.</option>
+      <option>Martín G.</option>
+      <option>Ana P.</option>
+    </select>
+    <button class="btn-nuevo" onclick="abrirModalNuevo()">+ Nuevo cliente</button>
+    <button onclick="window.PAI ? window.PAI.ir('index.html') : window.location.href='index.html'"
+      style="background:var(--negro-c);color:var(--blanco-d);border:1px solid rgba(240,238,233,.1);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s"
+      onmouseover="this.style.color='var(--blanco)'" onmouseout="this.style.color='var(--blanco-d)'">
+      🔍 Ir al Prospector
+    </button>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--azul)"></div>
+    <span class="stat-label">Total clientes</span>
+    <span class="stat-num" id="stat-total">0</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--verde)"></div>
+    <span class="stat-label">Cerrados este mes</span>
+    <span class="stat-num" id="stat-cerrados">0</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--naranja)"></div>
+    <span class="stat-label">En negociación</span>
+    <span class="stat-num" id="stat-negociacion">0</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--morado)"></div>
+    <span class="stat-label">Valor del pipeline</span>
+    <span class="stat-num" id="stat-valor">USD 0</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--cyan)"></div>
+    <span class="stat-label">Tasa de conversión</span>
+    <span class="stat-num" id="stat-conv">0%</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- VISTA KANBAN -->
+  <div id="vista-kanban" class="kanban"></div>
+
+  <!-- VISTA LISTA -->
+  <div id="vista-lista" class="lista-view" style="display:none">
+    <table class="lista-tabla">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Tipo</th>
+          <th>Etapa</th>
+          <th>Vendedor</th>
+          <th>Potencial</th>
+          <th>Valor est.</th>
+          <th>Último contacto</th>
+        </tr>
+      </thead>
+      <tbody id="lista-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL FICHA CLIENTE -->
+<div class="modal-overlay" id="modalFicha" onclick="cerrarFicha(event)">
+  <div class="modal" onclick="e=>e.stopPropagation()">
+    <div class="modal-top">
+      <div>
+        <div class="modal-eyebrow">Ficha de cliente · CRM</div>
+        <div class="modal-nombre" id="m-nombre">—</div>
+        <div class="modal-empresa" id="m-empresa">—</div>
+      </div>
+      <button class="modal-close" onclick="cerrarFichaBtn()">✕</button>
+    </div>
+
+    <div class="modal-etapa-bar">
+      <div class="etapa-steps" id="etapa-steps"></div>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="setModalTab('datos',this)">Datos</button>
+      <button class="modal-tab" onclick="setModalTab('timeline',this)">Timeline</button>
+      <button class="modal-tab" onclick="setModalTab('notas',this)">Notas</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- TAB DATOS -->
+      <div class="tab-content active" id="tab-datos">
+        <div class="datos-grid" id="datos-grid"></div>
+      </div>
+
+      <!-- TAB TIMELINE -->
+      <div class="tab-content" id="tab-timeline">
+        <div class="timeline" id="timeline-list"></div>
+      </div>
+
+      <!-- TAB NOTAS -->
+      <div class="tab-content" id="tab-notas">
+        <div class="nota-input-wrap">
+          <textarea class="nota-textarea" id="nota-nueva" placeholder="Escribí una nota sobre este cliente…"></textarea>
+          <div class="nota-acciones">
+            <button class="btn-nota btn-nota-pri" onclick="guardarNota()">Guardar nota</button>
+            <button class="btn-nota btn-nota-sec" onclick="document.getElementById('nota-nueva').value=''">Limpiar</button>
+          </div>
+        </div>
+        <div class="notas-list" id="notas-list"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-accion btn-wa" onclick="contactarWA()">📱 WhatsApp</button>
+      <button class="btn-accion btn-mail" onclick="copiarEmail()">📧 Email</button>
+      <button class="btn-accion btn-avanzar" onclick="avanzarEtapa()">Avanzar etapa →</button>
+      <button class="btn-accion btn-perder" onclick="marcarPerdido()">✕ Perdido</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO CLIENTE -->
+<div class="modal-overlay modal-overlay-center" id="modalNuevo" onclick="cerrarNuevo(event)">
+  <div class="modal-nuevo" onclick="e=>e.stopPropagation()">
+    <div class="modal-nuevo-header">
+      <div class="modal-nuevo-title">➕ Nuevo cliente</div>
+      <button class="modal-close" onclick="cerrarNuevoBtn()">✕</button>
+    </div>
+    <div class="modal-nuevo-body">
+      <div class="field-nuevo-row">
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Nombre / Razón social *</div>
+          <input class="dato-input" id="n-nombre" placeholder="Ferretería El Maestro">
+        </div>
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Tipo de negocio</div>
+          <select class="dato-select" id="n-tipo">
+            <option>Ferretería</option><option>Mayorista</option>
+            <option>Distribuidor</option><option>Construcción</option>
+            <option>Pinturería</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-nuevo-row">
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Contacto principal</div>
+          <input class="dato-input" id="n-contacto" placeholder="Nombre del responsable">
+        </div>
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Zona / Barrio</div>
+          <input class="dato-input" id="n-zona" placeholder="Palermo, La Matanza…">
+        </div>
+      </div>
+      <div class="field-nuevo-row">
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Teléfono</div>
+          <input class="dato-input" id="n-tel" placeholder="+54 11 XXXX-XXXX" type="tel">
+        </div>
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Email</div>
+          <input class="dato-input" id="n-email" placeholder="contacto@empresa.com" type="email">
+        </div>
+      </div>
+      <div class="field-nuevo-row">
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Vendedor asignado</div>
+          <select class="dato-select" id="n-vendedor">
+            <option>Lucas M.</option><option>Carla R.</option>
+            <option>Martín G.</option><option>Ana P.</option>
+          </select>
+        </div>
+        <div class="field-nuevo">
+          <div class="field-nuevo-label">Potencial</div>
+          <select class="dato-select" id="n-potencial">
+            <option value="alto">🟢 Alto</option>
+            <option value="medio" selected>🟡 Medio</option>
+            <option value="bajo">🔴 Bajo</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-nuevo">
+        <div class="field-nuevo-label">Valor estimado (USD)</div>
+        <input class="dato-input" id="n-valor" placeholder="500" type="number">
+      </div>
+    </div>
+    <div class="modal-nuevo-footer">
+      <button class="btn-accion btn-mail" style="flex:0;padding:9px 20px" onclick="cerrarNuevoBtn()">Cancelar</button>
+      <button class="btn-accion btn-avanzar" style="flex:0;padding:9px 20px" onclick="crearCliente()">Crear cliente</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="nav.js"></script>
+
+<script>
+// ── CONFIGURACIÓN DEL PIPELINE ──
+const ETAPAS = [
+  {id:'nuevo',     label:'Nuevo',      ico:'🆕', color:'var(--azul)',    clase:'c-azul'},
+  {id:'contactado',label:'Contactado', ico:'💬', color:'var(--cyan)',    clase:'c-cyan'},
+  {id:'interesado',label:'Interesado', ico:'⭐', color:'var(--naranja)', clase:'c-naranja'},
+  {id:'propuesta', label:'Propuesta',  ico:'📄', color:'var(--morado)',  clase:'c-morado'},
+  {id:'cerrado',   label:'Cerrado',    ico:'🏆', color:'var(--verde)',   clase:'c-verde'},
+  {id:'perdido',   label:'Perdido',    ico:'❌', color:'var(--rojo)',    clase:'c-rojo'},
+];
+
+const COLORES_VEND = {
+  'Lucas M.':'#2563EB','Carla R.':'#22C55E',
+  'Martín G.':'#F59E0B','Ana P.':'#8B5CF6'
+};
+
+const POTENCIAL_C = {alto:'#22C55E',medio:'#F59E0B',bajo:'#EF4444'};
+
+// ── BASE DE DATOS DEMO ──
+let CLIENTES = [
+  {id:1,nombre:'Ferretería Don Armando',tipo:'Ferretería',contacto:'Armando Giménez',zona:'Palermo',tel:'+54 11 4831-2244',email:'donarmando@ferreteria.com.ar',vendedor:'Lucas M.',potencial:'alto',etapa:'interesado',valor:800,fecha:'28/07',notas:[{autor:'Lucas M.',fecha:'28/07 14:30',texto:'Muy interesado en lubricantes. Llamar el lunes para confirmar pedido.'}],timeline:[{ico:'⭐',bg:'rgba(245,158,11,.15)',titulo:'Marcado como Interesado',tiempo:'Hace 2 días'},{ico:'💬',bg:'rgba(6,182,212,.15)',titulo:'Primer contacto por WhatsApp',tiempo:'Hace 4 días',nota:'Respondió positivamente. Pidió catálogo.'}]},
+  {id:2,nombre:'Distribuidora Palermo Norte',tipo:'Mayorista',contacto:'Laura Méndez',zona:'Palermo',tel:'+54 11 4772-8800',email:'compras@dipalernorte.com.ar',vendedor:'Lucas M.',potencial:'alto',etapa:'propuesta',valor:2400,fecha:'26/07',notas:[],timeline:[{ico:'📄',bg:'rgba(139,92,246,.15)',titulo:'Propuesta enviada',tiempo:'Hace 3 días',nota:'Enviado catálogo completo y lista de precios mayorista.'},{ico:'⭐',bg:'rgba(245,158,11,.15)',titulo:'Marcado como Interesado',tiempo:'Hace 5 días'},{ico:'💬',bg:'rgba(6,182,212,.15)',titulo:'Primer contacto',tiempo:'Hace 6 días'}]},
+  {id:3,nombre:'Ferretería Central Quilmes',tipo:'Ferretería',contacto:'Néstor Aguirre',zona:'Quilmes',tel:'+54 11 4253-1188',email:'central@ferreteraquilmes.com.ar',vendedor:'Martín G.',potencial:'alto',etapa:'cerrado',valor:1200,fecha:'24/07',notas:[{autor:'Martín G.',fecha:'24/07 10:00',texto:'Pedido cerrado. Entrega coordinada para el miércoles.'}],timeline:[{ico:'🏆',bg:'rgba(34,197,94,.15)',titulo:'¡Venta cerrada!',tiempo:'Hace 5 días',nota:'Primer pedido: 20 unidades lubricante + 5 spray.'},{ico:'📄',bg:'rgba(139,92,246,.15)',titulo:'Propuesta enviada',tiempo:'Hace 8 días'},{ico:'⭐',bg:'rgba(245,158,11,.15)',titulo:'Interesado confirmado',tiempo:'Hace 10 días'}]},
+  {id:4,nombre:'Mayorista Industrial Avellaneda',tipo:'Mayorista',contacto:'Fabio Bernasconi',zona:'Avellaneda',tel:'+54 11 4222-5500',email:'industrial@mayoristavell.com.ar',vendedor:'Martín G.',potencial:'alto',etapa:'contactado',valor:3200,fecha:'29/07',notas:[],timeline:[{ico:'💬',bg:'rgba(6,182,212,.15)',titulo:'Contacto inicial por WhatsApp',tiempo:'Ayer',nota:'Respondió. Pidió que llamemos esta semana.'}]},
+  {id:5,nombre:'Pinturas y Más Palermo',tipo:'Pinturería',contacto:'Roberto Sánchez',zona:'Palermo',tel:'+54 11 4832-1155',email:'ventas@pinturasmas.com.ar',vendedor:'Lucas M.',potencial:'medio',etapa:'nuevo',valor:400,fecha:'30/07',notas:[],timeline:[{ico:'🆕',bg:'rgba(37,99,235,.15)',titulo:'Cliente creado',tiempo:'Hoy'}]},
+  {id:6,nombre:'Distribuidora Sur GBA',tipo:'Distribuidor',contacto:'Claudia Ramírez',zona:'Quilmes',tel:'+54 11 4257-6600',email:'ventas@distribuidorasur.com.ar',vendedor:'Carla R.',potencial:'alto',etapa:'interesado',valor:1800,fecha:'27/07',notas:[],timeline:[{ico:'⭐',bg:'rgba(245,158,11,.15)',titulo:'Interesado confirmado',tiempo:'Hace 2 días'},{ico:'💬',bg:'rgba(6,182,212,.15)',titulo:'Contacto inicial',tiempo:'Hace 4 días'}]},
+  {id:7,nombre:'Ferretería El Martillo',tipo:'Ferretería',contacto:'Jorge Pérez',zona:'La Matanza',tel:'+54 11 4698-7744',email:'elmartillo@hotmail.com',vendedor:'Carla R.',potencial:'medio',etapa:'perdido',valor:600,fecha:'20/07',notas:[{autor:'Carla R.',fecha:'20/07 16:00',texto:'No les interesó por precio. Tienen proveedor fijo.'}],timeline:[{ico:'❌',bg:'rgba(239,68,68,.15)',titulo:'Marcado como Perdido',tiempo:'Hace 10 días',nota:'Precio no competitivo para su volumen.'},{ico:'📄',bg:'rgba(139,92,246,.15)',titulo:'Propuesta enviada',tiempo:'Hace 12 días'}]},
+  {id:8,nombre:'Materiales Construir',tipo:'Construcción',contacto:'Diego Torres',zona:'Palermo',tel:'+54 11 4773-4400',email:'info@construmax.com.ar',vendedor:'Ana P.',potencial:'medio',etapa:'nuevo',valor:500,fecha:'30/07',notas:[],timeline:[{ico:'🆕',bg:'rgba(37,99,235,.15)',titulo:'Cliente creado desde Prospector',tiempo:'Hoy'}]},
+];
+
+let clienteActual = null;
+let vistaActual = 'kanban';
+let filtroTexto = '';
+let filtroVendedor = 'todos';
+
+// ── RENDER KANBAN ──
+function renderKanban() {
+  const wrap = document.getElementById('vista-kanban');
+  const filtrados = clientesFiltrados();
+
+  wrap.innerHTML = ETAPAS.map(e => {
+    const cards = filtrados.filter(c => c.etapa === e.id);
+    const valorTotal = cards.reduce((s,c) => s + (c.valor||0), 0);
+    return `
+      <div class="col">
+        <div class="col-header" style="background:${e.color}18;border-bottom:2px solid ${e.color}40">
+          <div class="col-titulo">
+            <span>${e.ico}</span>
+            <span>${e.label}</span>
+            <span class="col-count">${cards.length}</span>
+          </div>
+          ${valorTotal ? `<span class="col-valor">USD ${valorTotal.toLocaleString('es-AR')}</span>` : ''}
+        </div>
+        <div class="col-cards" id="col-${e.id}">
+          ${cards.length ? cards.map(c => renderCard(c, e)).join('') : `<div class="col-empty">Sin clientes en esta etapa</div>`}
+        </div>
+        <button class="btn-add-card" onclick="abrirModalNuevoEnEtapa('${e.id}')">+ Agregar</button>
+      </div>`;
+  }).join('');
+
+  actualizarStats();
+}
+
+function renderCard(c, etapa) {
+  const ini = c.vendedor.split(' ').map(w=>w[0]).join('').slice(0,2);
+  const col = COLORES_VEND[c.vendedor] || '#666';
+  return `
+    <div class="card ${etapa.clase}" onclick="abrirFicha(${c.id})">
+      <div class="card-nombre">${c.nombre}</div>
+      <div class="card-empresa">${c.tipo} · ${c.zona}</div>
+      <div class="card-tags">
+        <span class="card-potencial" style="background:${POTENCIAL_C[c.potencial]}20;color:${POTENCIAL_C[c.potencial]}">● ${c.potencial}</span>
+        ${c.notas.length ? `<span class="card-tag" style="background:rgba(240,238,233,.08);color:var(--blanco-d)">📝 ${c.notas.length}</span>` : ''}
+      </div>
+      <div class="card-footer">
+        <div class="card-vend">
+          <div class="card-avatar" style="background:${col}">${ini}</div>
+          ${c.vendedor}
+        </div>
+        ${c.valor ? `<div class="card-valor">USD ${c.valor.toLocaleString('es-AR')}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+// ── RENDER LISTA ──
+function renderLista() {
+  const filtrados = clientesFiltrados();
+  const EC = {nuevo:'#2563EB',contactado:'#06B6D4',interesado:'#F59E0B',propuesta:'#8B5CF6',cerrado:'#22C55E',perdido:'#EF4444'};
+  const EL = {nuevo:'🆕 Nuevo',contactado:'💬 Contactado',interesado:'⭐ Interesado',propuesta:'📄 Propuesta',cerrado:'🏆 Cerrado',perdido:'❌ Perdido'};
+
+  document.getElementById('lista-tbody').innerHTML = filtrados.map(c => `
+    <tr onclick="abrirFicha(${c.id})">
+      <td><div class="cl-nombre">${c.nombre}</div><div class="cl-sub">${c.contacto} · ${c.zona}</div></td>
+      <td><span style="font-size:12px;color:var(--blanco-d)">${c.tipo}</span></td>
+      <td><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;background:${EC[c.etapa]}20;color:${EC[c.etapa]}">${EL[c.etapa]}</span></td>
+      <td><span style="font-size:12px">${c.vendedor}</span></td>
+      <td><span style="color:${POTENCIAL_C[c.potencial]};font-size:12px;font-weight:600">● ${c.potencial}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--verde)">${c.valor ? 'USD '+c.valor.toLocaleString('es-AR') : '—'}</span></td>
+      <td><span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--blanco-d)">${c.fecha}</span></td>
+    </tr>`).join('');
+}
+
+// ── STATS ──
+function actualizarStats() {
+  const todos = CLIENTES;
+  const cerrados = todos.filter(c=>c.etapa==='cerrado').length;
+  const negociacion = todos.filter(c=>['interesado','propuesta'].includes(c.etapa)).length;
+  const valor = todos.filter(c=>c.etapa!=='perdido').reduce((s,c)=>s+(c.valor||0),0);
+  const conv = todos.length ? Math.round(cerrados/todos.length*100) : 0;
+  document.getElementById('stat-total').textContent = todos.length;
+  document.getElementById('stat-cerrados').textContent = cerrados;
+  document.getElementById('stat-negociacion').textContent = negociacion;
+  document.getElementById('stat-valor').textContent = 'USD '+valor.toLocaleString('es-AR');
+  document.getElementById('stat-conv').textContent = conv+'%';
+}
+
+// ── FILTROS ──
+function clientesFiltrados() {
+  return CLIENTES.filter(c => {
+    const textoOk = !filtroTexto || c.nombre.toLowerCase().includes(filtroTexto) || c.zona.toLowerCase().includes(filtroTexto) || c.contacto.toLowerCase().includes(filtroTexto);
+    const vendOk = filtroVendedor === 'todos' || c.vendedor === filtroVendedor;
+    return textoOk && vendOk;
+  });
+}
+function filtrarClientes(v) { filtroTexto=v.toLowerCase(); render(); }
+function filtrarPorVendedor(v) { filtroVendedor=v; render(); }
+function render() { vistaActual==='kanban' ? renderKanban() : renderLista(); }
+
+// ── VISTA ──
+function setVista(v, btn) {
+  vistaActual = v;
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('vista-kanban').style.display = v==='kanban' ? 'flex' : 'none';
+  document.getElementById('vista-lista').style.display = v==='lista' ? 'block' : 'none';
+  render();
+}
+
+// ── FICHA ──
+function abrirFicha(id) {
+  clienteActual = CLIENTES.find(c=>c.id===id);
+  if(!clienteActual) return;
+  const c = clienteActual;
+
+  document.getElementById('m-nombre').textContent = c.nombre;
+  document.getElementById('m-empresa').textContent = `${c.tipo} · ${c.zona} · ${c.contacto}`;
+
+  // Etapas
+  const etapaIdx = ETAPAS.findIndex(e=>e.id===c.etapa);
+  document.getElementById('etapa-steps').innerHTML = ETAPAS.filter(e=>e.id!=='perdido').map((e,i)=>`
+    <div class="etapa-step ${i<etapaIdx?'done':i===etapaIdx?'active':''}" onclick="cambiarEtapa('${e.id}')">
+      <div class="etapa-dot">${i<etapaIdx?'✓':e.ico}</div>
+      <div class="etapa-lbl">${e.label}</div>
+    </div>`).join('');
+
+  // Datos
+  document.getElementById('datos-grid').innerHTML = `
+    <div class="dato-field"><div class="dato-label">Contacto</div><div class="dato-val">${c.contacto}</div></div>
+    <div class="dato-field"><div class="dato-label">Tipo</div><div class="dato-val">${c.tipo}</div></div>
+    <div class="dato-field"><div class="dato-label">Teléfono</div><div class="dato-val"><a href="tel:${c.tel}" style="color:var(--azul-xl);text-decoration:none">${c.tel}</a></div></div>
+    <div class="dato-field"><div class="dato-label">Email</div><div class="dato-val" style="font-size:12px">${c.email}</div></div>
+    <div class="dato-field"><div class="dato-label">Zona</div><div class="dato-val">${c.zona}</div></div>
+    <div class="dato-field"><div class="dato-label">Vendedor</div><div class="dato-val">${c.vendedor}</div></div>
+    <div class="dato-field"><div class="dato-label">Potencial</div><div class="dato-val" style="color:${POTENCIAL_C[c.potencial]};font-weight:700">● ${c.potencial.toUpperCase()}</div></div>
+    <div class="dato-field"><div class="dato-label">Valor estimado</div><div class="dato-val" style="color:var(--verde);font-weight:700">${c.valor?'USD '+c.valor.toLocaleString('es-AR'):'—'}</div></div>
+    <div class="dato-field" style="grid-column:1/-1">
+      <div class="dato-label">Notas rápidas</div>
+      <textarea class="dato-input" rows="3" style="margin-top:4px" placeholder="Observaciones generales…"></textarea>
+    </div>`;
+
+  // Timeline
+  document.getElementById('timeline-list').innerHTML = c.timeline.map(t=>`
+    <div class="tl-item">
+      <div class="tl-ico" style="background:${t.bg}">${t.ico}</div>
+      <div class="tl-content">
+        <div class="tl-titulo">${t.titulo}</div>
+        <div class="tl-tiempo">${t.tiempo}</div>
+        ${t.nota?`<div class="tl-nota">${t.nota}</div>`:''}
+      </div>
+    </div>`).join('');
+
+  // Notas
+  renderNotas();
+
+  // Reset tabs
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.modal-tab').classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-datos').classList.add('active');
+
+  document.getElementById('modalFicha').classList.add('open');
+}
+
+function renderNotas() {
+  if(!clienteActual) return;
+  document.getElementById('notas-list').innerHTML = clienteActual.notas.length
+    ? clienteActual.notas.map(n=>`
+        <div class="nota-item">
+          <div class="nota-meta">
+            <span class="nota-autor">👤 ${n.autor}</span>
+            <span class="nota-fecha">${n.fecha}</span>
+          </div>
+          <div class="nota-texto">${n.texto}</div>
+        </div>`).join('')
+    : '<div style="font-size:13px;color:var(--blanco-d);text-align:center;padding:20px 0">Sin notas todavía</div>';
+}
+
+function cerrarFicha(e) {
+  if(e && e.target !== document.getElementById('modalFicha')) return;
+  cerrarFichaBtn();
+}
+function cerrarFichaBtn() {
+  document.getElementById('modalFicha').classList.remove('open');
+  clienteActual = null;
+}
+
+function setModalTab(tab, btn) {
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── ACCIONES FICHA ──
+function avanzarEtapa() {
+  if(!clienteActual) return;
+  const idx = ETAPAS.findIndex(e=>e.id===clienteActual.etapa);
+  const etapasAvanz = ETAPAS.filter(e=>e.id!=='perdido');
+  if(idx < etapasAvanz.length-1) {
+    const nueva = etapasAvanz[idx+1];
+    cambiarEtapa(nueva.id);
+  }
+}
+
+function cambiarEtapa(nuevaId) {
+  if(!clienteActual) return;
+  const etapa = ETAPAS.find(e=>e.id===nuevaId);
+  clienteActual.etapa = nuevaId;
+  clienteActual.timeline.unshift({ico:etapa.ico,bg:`rgba(240,238,233,.08)`,titulo:`Movido a ${etapa.label}`,tiempo:'Ahora'});
+  abrirFicha(clienteActual.id);
+  render();
+  mostrarToast(`✓ Cliente movido a ${etapa.label}`);
+}
+
+function marcarPerdido() {
+  if(!clienteActual) return;
+  if(confirm(`¿Marcar "${clienteActual.nombre}" como perdido?`)) {
+    cambiarEtapa('perdido');
+    cerrarFichaBtn();
+  }
+}
+
+function guardarNota() {
+  if(!clienteActual) return;
+  const texto = document.getElementById('nota-nueva').value.trim();
+  if(!texto) return;
+  const ahora = new Date();
+  clienteActual.notas.unshift({
+    autor:'Alejo Paz',
+    fecha:`${ahora.getDate()}/${ahora.getMonth()+1} ${ahora.getHours()}:${String(ahora.getMinutes()).padStart(2,'0')}`,
+    texto
+  });
+  clienteActual.timeline.unshift({ico:'📝',bg:'rgba(37,99,235,.15)',titulo:'Nueva nota agregada',tiempo:'Ahora'});
+  document.getElementById('nota-nueva').value='';
+  renderNotas();
+  mostrarToast('✓ Nota guardada');
+}
+
+function contactarWA() {
+  if(!clienteActual) return;
+  const tel = clienteActual.tel.replace(/\D/g,'');
+  const msg = `Hola ${clienteActual.contacto}, te contacto de parte de FerreMax. ¿Tenés unos minutos para conversar sobre nuestra propuesta?`;
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`,'_blank');
+  clienteActual.timeline.unshift({ico:'💬',bg:'rgba(6,182,212,.15)',titulo:'Contacto por WhatsApp',tiempo:'Ahora'});
+  mostrarToast('✓ Abriendo WhatsApp');
+}
+
+function copiarEmail() {
+  if(!clienteActual) return;
+  navigator.clipboard?.writeText(clienteActual.email)
+    .then(()=>mostrarToast(`✓ Email copiado: ${clienteActual.email}`));
+}
+
+// ── NUEVO CLIENTE ──
+let etapaNueva = 'nuevo';
+
+function abrirModalNuevo() { etapaNueva='nuevo'; document.getElementById('modalNuevo').classList.add('open'); }
+function abrirModalNuevoEnEtapa(etapa) { etapaNueva=etapa; document.getElementById('modalNuevo').classList.add('open'); }
+function cerrarNuevo(e) { if(e.target===document.getElementById('modalNuevo')) cerrarNuevoBtn(); }
+function cerrarNuevoBtn() {
+  document.getElementById('modalNuevo').classList.remove('open');
+  ['n-nombre','n-contacto','n-zona','n-tel','n-email','n-valor'].forEach(id=>{ document.getElementById(id).value=''; });
+}
+
+function crearCliente() {
+  const nombre = document.getElementById('n-nombre').value.trim();
+  if(!nombre){ document.getElementById('n-nombre').focus(); return; }
+  const ahora = new Date();
+  const fecha = `${ahora.getDate()}/${ahora.getMonth()+1}`;
+  const nuevo = {
+    id: Date.now(),
+    nombre,
+    tipo: document.getElementById('n-tipo').value,
+    contacto: document.getElementById('n-contacto').value || 'Sin especificar',
+    zona: document.getElementById('n-zona').value || 'Sin zona',
+    tel: document.getElementById('n-tel').value || '—',
+    email: document.getElementById('n-email').value || '—',
+    vendedor: document.getElementById('n-vendedor').value,
+    potencial: document.getElementById('n-potencial').value,
+    etapa: etapaNueva,
+    valor: parseInt(document.getElementById('n-valor').value)||0,
+    fecha,
+    notas:[],
+    timeline:[{ico:'🆕',bg:'rgba(37,99,235,.15)',titulo:'Cliente creado',tiempo:'Ahora'}]
+  };
+  CLIENTES.unshift(nuevo);
+  cerrarNuevoBtn();
+  render();
+  mostrarToast(`✓ ${nombre} agregado al CRM`);
+}
+
+// ── TOAST ──
+function mostrarToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+renderKanban();
+</script>
+</body>
+</html>

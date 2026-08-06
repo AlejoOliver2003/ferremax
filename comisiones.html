@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProspectAI — Comisiones</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#111318;--negro-m:#1C1F26;--negro-c:#252830;--negro-b:#2A2D35;
+  --blanco:#F0EEE9;--blanco-d:#9CA3AF;
+  --azul:#2563EB;--azul-l:#3B82F6;--azul-xl:#93C5FD;
+  --verde:#22C55E;--rojo:#EF4444;--naranja:#F59E0B;--morado:#8B5CF6;--cyan:#06B6D4;
+}
+body{font-family:'Inter',sans-serif;background:var(--negro);color:var(--blanco);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--negro-m);border-bottom:1px solid rgba(240,238,233,.06);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:800;font-size:17px}
+.topbar-title span{color:var(--azul)}
+.mes-selector{display:flex;align-items:center;gap:8px;background:var(--negro-c);border:1px solid rgba(240,238,233,.08);border-radius:6px;padding:5px 12px}
+.mes-btn{background:none;border:none;color:var(--blanco-d);cursor:pointer;font-size:16px;padding:0 2px;line-height:1}
+.mes-btn:hover{color:var(--blanco)}
+.mes-label{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--blanco);min-width:100px;text-align:center}
+.topbar-right{display:flex;gap:8px}
+.btn-top{background:var(--negro-c);border:1px solid rgba(240,238,233,.08);border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--blanco-d);font-family:'Inter',sans-serif;transition:all .15s}
+.btn-top:hover{color:var(--blanco);border-color:rgba(240,238,233,.2)}
+.btn-top.primary{background:var(--azul);color:var(--blanco);border-color:var(--azul)}
+.btn-top.primary:hover{background:var(--azul-l)}
+
+/* KPI STRIP */
+.kpi-strip{background:var(--negro-m);border-bottom:1px solid rgba(240,238,233,.06);padding:12px 24px;display:flex;gap:0;overflow-x:auto;flex-shrink:0}
+.kpi-strip::-webkit-scrollbar{height:0}
+.kpi-s{display:flex;flex-direction:column;gap:2px;padding:0 24px;border-right:1px solid rgba(240,238,233,.06);flex-shrink:0}
+.kpi-s:first-child{padding-left:0}
+.kpi-s:last-child{border-right:none}
+.kpi-s-label{font-size:10px;color:var(--blanco-d);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em}
+.kpi-s-val{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;line-height:1}
+.kpi-s-sub{font-size:10px;color:var(--blanco-d)}
+
+/* MAIN */
+.main{flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.main::-webkit-scrollbar{width:4px}
+.main::-webkit-scrollbar-thumb{background:var(--negro-b);border-radius:2px}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-config{display:grid;grid-template-columns:340px 1fr;gap:16px}
+@media(max-width:960px){.grid-2,.grid-3,.grid-config{grid-template-columns:1fr}}
+
+/* PANEL */
+.panel{background:var(--negro-m);border:1px solid rgba(240,238,233,.08);border-radius:10px;padding:20px}
+.panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:4px}
+.panel-sub{font-size:11px;color:var(--blanco-d);margin-bottom:16px}
+
+/* CONFIGURACIÓN DE ESQUEMA */
+.esquema-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.esquema-tab{padding:6px 14px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(240,238,233,.1);background:transparent;color:var(--blanco-d);font-family:'Inter',sans-serif;transition:all .15s}
+.esquema-tab.active{background:var(--azul);border-color:var(--azul);color:var(--blanco)}
+
+.config-field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.config-label{font-size:11px;font-weight:600;color:var(--blanco-d);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace}
+.config-input{background:var(--negro-c);border:1.5px solid rgba(240,238,233,.1);border-radius:6px;padding:9px 12px;color:var(--blanco);font-family:'DM Mono',monospace;font-size:14px;font-weight:600;outline:none;transition:border-color .2s;width:100%}
+.config-input:focus{border-color:var(--azul)}
+.config-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.tramo-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.tramo-item{display:flex;align-items:center;gap:8px;background:var(--negro-c);border:1px solid rgba(240,238,233,.06);border-radius:6px;padding:8px 12px;font-size:12px;font-family:'DM Mono',monospace}
+.tramo-del{background:none;border:none;color:var(--rojo);cursor:pointer;font-size:14px;margin-left:auto;opacity:.6;transition:opacity .15s}
+.tramo-del:hover{opacity:1}
+.tramo-badge{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700}
+.btn-add-tramo{background:transparent;border:1.5px dashed rgba(240,238,233,.12);border-radius:6px;padding:8px;color:rgba(240,238,233,.4);font-size:12px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;transition:all .2s}
+.btn-add-tramo:hover{border-color:var(--azul);color:var(--azul)}
+.btn-calcular{width:100%;background:var(--verde);color:var(--negro);border:none;border-radius:7px;padding:12px;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all .15s;margin-top:8px;letter-spacing:.02em}
+.btn-calcular:hover{background:#1aad50;transform:translateY(-1px);box-shadow:0 4px 16px rgba(34,197,94,.25)}
+
+/* VENDEDOR RESULT CARDS */
+.vend-results{display:flex;flex-direction:column;gap:10px}
+.vr-card{background:var(--negro-c);border:1px solid rgba(240,238,233,.08);border-radius:8px;padding:16px;transition:all .2s}
+.vr-card:hover{border-color:rgba(240,238,233,.16)}
+.vr-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.vr-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:white;flex-shrink:0}
+.vr-nombre{font-weight:700;font-size:14px}
+.vr-zona{font-size:11px;color:var(--blanco-d)}
+.vr-comision-big{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--verde);margin-left:auto;line-height:1}
+.vr-comision-label{font-size:9px;color:var(--blanco-d);font-family:'DM Mono',monospace;text-align:right;margin-top:2px}
+
+.vr-desglose{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.vr-d-item{background:var(--negro-b);border-radius:6px;padding:10px 12px}
+.vr-d-label{font-size:10px;color:var(--blanco-d);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.vr-d-val{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
+.vr-d-sub{font-size:10px;color:var(--blanco-d);margin-top:1px}
+
+.vr-tramos{display:flex;flex-direction:column;gap:4px}
+.vr-tramo-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(240,238,233,.04)}
+.vr-tramo-row:last-child{border-bottom:none}
+.vr-tramo-label{color:var(--blanco-d)}
+.vr-tramo-val{font-family:'DM Mono',monospace;font-weight:600}
+
+/* CHART */
+.chart-wrap{position:relative;height:220px}
+
+/* TABLA RESUMEN */
+.tabla-res{width:100%;border-collapse:collapse}
+.tabla-res th{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blanco-d);font-family:'DM Mono',monospace;padding:8px 12px;text-align:left;border-bottom:1px solid rgba(240,238,233,.06);background:var(--negro-c)}
+.tabla-res td{padding:10px 12px;border-bottom:1px solid rgba(240,238,233,.04);font-size:13px;vertical-align:middle}
+.tabla-res tr:last-child td{border-bottom:none;font-weight:700;background:rgba(34,197,94,.05)}
+
+/* HISTORIAL */
+.hist-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.hist-list::-webkit-scrollbar{width:3px}
+.hist-list::-webkit-scrollbar-thumb{background:var(--negro-b)}
+.hist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--negro-c);border-radius:6px;font-size:12px}
+.hist-ico{font-size:14px;flex-shrink:0;margin-top:1px}
+.hist-info{flex:1}
+.hist-txt{color:var(--blanco-d);line-height:1.4;margin-bottom:2px}
+.hist-txt strong{color:var(--blanco)}
+.hist-meta{display:flex;justify-content:space-between}
+.hist-monto{font-family:'Syne',sans-serif;font-weight:700;color:var(--verde);font-size:13px}
+.hist-tiempo{font-size:10px;color:rgba(240,238,233,.3);font-family:'DM Mono',monospace}
+
+/* MODAL TRAMO */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--negro-m);border:1px solid rgba(240,238,233,.1);border-radius:12px;width:100%;max-width:420px;box-shadow:0 16px 48px rgba(0,0,0,.5);animation:popIn .2s ease;overflow:hidden}
+@keyframes popIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{padding:16px 24px;border-bottom:1px solid rgba(240,238,233,.06);display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.modal-close{background:none;border:none;color:var(--blanco-d);cursor:pointer;font-size:18px;line-height:1}
+.modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:12px}
+.modal-footer{padding:14px 24px;border-top:1px solid rgba(240,238,233,.06);display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:var(--negro-c);color:var(--blanco-d);border:1px solid rgba(240,238,233,.1);border-radius:6px;padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-ok{background:var(--azul);color:var(--blanco);border:none;border-radius:6px;padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-ok:hover{background:var(--azul-l)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--negro-m);border:1px solid var(--verde);border-radius:6px;padding:10px 18px;font-size:12px;font-weight:600;color:var(--blanco);z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-title">Prospect<span>AI</span> — Comisiones</div>
+    <div class="mes-selector">
+      <button class="mes-btn" onclick="cambiarMes(-1)">‹</button>
+      <span class="mes-label" id="mes-label">Julio 2026</span>
+      <button class="mes-btn" onclick="cambiarMes(1)">›</button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-top" onclick="window.PAI?window.PAI.ir('index.html'):window.location.href='index.html'">🔍 Prospector</button>
+    <button class="btn-top" onclick="window.PAI?window.PAI.ir('metas.html'):window.location.href='metas.html'">🎯 Metas</button>
+    <button class="btn-top primary" onclick="calcularComisiones()">💰 Calcular</button>
+  </div>
+</div>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi-s">
+    <div class="kpi-s-label">Total a pagar</div>
+    <div class="kpi-s-val" id="ks-total" style="color:var(--verde)">USD 0</div>
+    <div class="kpi-s-sub">este mes</div>
+  </div>
+  <div class="kpi-s">
+    <div class="kpi-s-label">Mayor comisión</div>
+    <div class="kpi-s-val" id="ks-mayor" style="color:var(--naranja);font-size:16px">—</div>
+    <div class="kpi-s-sub" id="ks-mayor-quien"></div>
+  </div>
+  <div class="kpi-s">
+    <div class="kpi-s-label">Promedio equipo</div>
+    <div class="kpi-s-val" id="ks-prom" style="color:var(--azul-xl)">USD 0</div>
+    <div class="kpi-s-sub">por vendedor</div>
+  </div>
+  <div class="kpi-s">
+    <div class="kpi-s-label">Ingresos generados</div>
+    <div class="kpi-s-val" id="ks-ingresos" style="color:var(--cyan);font-size:16px">USD 0</div>
+    <div class="kpi-s-sub" id="ks-ing-ratio"></div>
+  </div>
+  <div class="kpi-s">
+    <div class="kpi-s-label">Esquema activo</div>
+    <div class="kpi-s-val" id="ks-esquema" style="color:var(--morado);font-size:15px">—</div>
+    <div class="kpi-s-sub">de comisión</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- FILA 1: CONFIG + RESULTADOS -->
+  <div class="grid-config">
+
+    <!-- PANEL CONFIGURACIÓN -->
+    <div class="panel">
+      <div class="panel-title">⚙️ Esquema de comisiones</div>
+      <div class="panel-sub">Configurá cómo se calculan las comisiones del equipo</div>
+
+      <div class="esquema-tabs">
+        <button class="esquema-tab active" id="tab-porcentaje" onclick="setEsquema('porcentaje',this)">% Fijo</button>
+        <button class="esquema-tab" id="tab-escalado" onclick="setEsquema('escalado',this)">Escalado</button>
+        <button class="esquema-tab" id="tab-mixto" onclick="setEsquema('mixto',this)">Mixto</button>
+      </div>
+
+      <!-- PORCENTAJE FIJO -->
+      <div id="cfg-porcentaje">
+        <div class="config-field">
+          <div class="config-label">% de comisión sobre ventas</div>
+          <input class="config-input" type="number" id="pct-fijo" value="8" min="0" max="100" step="0.5">
+        </div>
+        <div class="config-row">
+          <div class="config-field">
+            <div class="config-label">Bono por meta alcanzada</div>
+            <input class="config-input" type="number" id="bono-meta" value="200" min="0">
+          </div>
+          <div class="config-field">
+            <div class="config-label">% mínimo para bono</div>
+            <input class="config-input" type="number" id="pct-bono" value="80" min="0" max="100">
+          </div>
+        </div>
+      </div>
+
+      <!-- ESCALADO (por tramos) -->
+      <div id="cfg-escalado" style="display:none">
+        <div class="config-label" style="margin-bottom:8px">Tramos de comisión</div>
+        <div class="tramo-list" id="tramo-list"></div>
+        <button class="btn-add-tramo" onclick="abrirModalTramo()">+ Agregar tramo</button>
+        <div class="config-field" style="margin-top:12px">
+          <div class="config-label">Bono por superar meta 100%</div>
+          <input class="config-input" type="number" id="bono-superacion" value="300" min="0">
+        </div>
+      </div>
+
+      <!-- MIXTO -->
+      <div id="cfg-mixto" style="display:none">
+        <div class="config-row">
+          <div class="config-field">
+            <div class="config-label">Sueldo base (USD)</div>
+            <input class="config-input" type="number" id="sueldo-base" value="500" min="0">
+          </div>
+          <div class="config-field">
+            <div class="config-label">% sobre ventas</div>
+            <input class="config-input" type="number" id="pct-mixto" value="5" min="0" max="100" step="0.5">
+          </div>
+        </div>
+        <div class="config-row">
+          <div class="config-field">
+            <div class="config-label">Bono por cierre (USD)</div>
+            <input class="config-input" type="number" id="bono-cierre" value="50" min="0">
+          </div>
+          <div class="config-field">
+            <div class="config-label">Bono meta completa</div>
+            <input class="config-input" type="number" id="bono-meta-m" value="250" min="0">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-calcular" onclick="calcularComisiones()">💰 Calcular comisiones</button>
+    </div>
+
+    <!-- PANEL RESULTADOS -->
+    <div class="panel">
+      <div class="panel-title">💰 Resultados del mes</div>
+      <div class="panel-sub">Comisión calculada por vendedor</div>
+      <div class="vend-results" id="vend-results">
+        <div style="text-align:center;padding:40px 20px;color:var(--blanco-d);font-size:13px">
+          <div style="font-size:32px;margin-bottom:12px;opacity:.3">💰</div>
+          Configurá el esquema y tocá <strong style="color:var(--blanco)">"Calcular comisiones"</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA 2: GRÁFICOS -->
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-title">Comparativa de comisiones</div>
+      <div class="panel-sub">Desglose por vendedor este mes</div>
+      <div class="chart-wrap">
+        <canvas id="chartComisiones"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Evolución mensual</div>
+      <div class="panel-sub">Comisiones pagadas últimos 6 meses</div>
+      <div class="chart-wrap">
+        <canvas id="chartEvolucion"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA 3: TABLA RESUMEN + HISTORIAL -->
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-title">Resumen ejecutivo</div>
+      <div class="panel-sub">Todos los componentes por vendedor</div>
+      <table class="tabla-res" id="tabla-resumen">
+        <thead>
+          <tr>
+            <th>Vendedor</th>
+            <th>Ventas USD</th>
+            <th>Comisión base</th>
+            <th>Bonos</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body">
+          <tr><td colspan="5" style="text-align:center;color:var(--blanco-d);padding:20px">Calculá para ver el resumen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Historial de pagos</div>
+      <div class="panel-sub">Últimos meses liquidados</div>
+      <div class="hist-list" id="hist-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL TRAMO -->
+<div class="modal-overlay" id="modalTramo" onclick="cerrarModalTramo(event)">
+  <div class="modal" onclick="e=>e.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Agregar tramo de comisión</div>
+      <button class="modal-close" onclick="cerrarModalTramoBtn()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="config-field">
+        <div class="config-label">Desde (USD en ventas)</div>
+        <input class="config-input" type="number" id="tramo-desde" placeholder="0" min="0">
+      </div>
+      <div class="config-field">
+        <div class="config-label">Hasta (USD en ventas — 0 = sin límite)</div>
+        <input class="config-input" type="number" id="tramo-hasta" placeholder="1000" min="0">
+      </div>
+      <div class="config-field">
+        <div class="config-label">% de comisión en este tramo</div>
+        <input class="config-input" type="number" id="tramo-pct" placeholder="8" min="0" max="100" step="0.5">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModalTramoBtn()">Cancelar</button>
+      <button class="btn-ok" onclick="agregarTramo()">Agregar tramo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="nav.js"></script>
+
+<script>
+// ── DATOS ──
+const MESES_LABELS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let mesActual = new Date().getMonth();
+let anioActual = new Date().getFullYear();
+let esquemaActual = 'porcentaje';
+
+const VENDEDORES = [
+  {nombre:'Lucas M.',  zona:'Palermo / Belgrano',   color:'#2563EB', ini:'LM', ventas:1820, cierres:19, metaAlcanzada:95},
+  {nombre:'Carla R.',  zona:'La Matanza / Merlo',   color:'#22C55E', ini:'CR', ventas:1340, cierres:14, metaAlcanzada:89},
+  {nombre:'Martín G.', zona:'Quilmes / Avellaneda', color:'#F59E0B', ini:'MG', ventas:860,  cierres:9,  metaAlcanzada:71},
+  {nombre:'Ana P.',    zona:'Lanús / Lomas',        color:'#8B5CF6', ini:'AP', ventas:480,  cierres:5,  metaAlcanzada:48},
+];
+
+let TRAMOS = [
+  {desde:0,    hasta:500,  pct:6},
+  {desde:500,  hasta:1000, pct:8},
+  {desde:1000, hasta:0,    pct:12},
+];
+
+const HISTORIAL = [
+  {mes:'Junio 2026',   total:1840, detalle:'4 vendedores · Esquema % fijo 8%'},
+  {mes:'Mayo 2026',    total:1620, detalle:'4 vendedores · Esquema escalado'},
+  {mes:'Abril 2026',   total:1480, detalle:'3 vendedores · Esquema mixto'},
+  {mes:'Marzo 2026',   total:1290, detalle:'4 vendedores · Esquema % fijo 7%'},
+  {mes:'Febrero 2026', total:1100, detalle:'4 vendedores · Esquema % fijo 7%'},
+];
+
+let chartCom = null, chartEvol = null;
+
+// ── MES ──
+function cambiarMes(dir) {
+  mesActual += dir;
+  if(mesActual < 0){mesActual=11;anioActual--;}
+  if(mesActual > 11){mesActual=0;anioActual++;}
+  document.getElementById('mes-label').textContent = `${MESES_LABELS[mesActual]} ${anioActual}`;
+}
+
+// ── ESQUEMA ──
+function setEsquema(tipo, btn) {
+  esquemaActual = tipo;
+  document.querySelectorAll('.esquema-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['porcentaje','escalado','mixto'].forEach(t=>{
+    document.getElementById('cfg-'+t).style.display = t===tipo?'block':'none';
+  });
+  document.getElementById('ks-esquema').textContent =
+    tipo==='porcentaje'?'% Fijo':tipo==='escalado'?'Escalado':'Mixto';
+}
+
+// ── TRAMOS ──
+function renderTramos() {
+  document.getElementById('tramo-list').innerHTML = TRAMOS.map((t,i)=>`
+    <div class="tramo-item">
+      <span class="tramo-badge" style="background:rgba(37,99,235,.15);color:var(--azul-xl)">USD ${t.desde}${t.hasta?` → ${t.hasta}`:'+'}</span>
+      <span style="color:var(--blanco);font-weight:700">${t.pct}%</span>
+      <button class="tramo-del" onclick="eliminarTramo(${i})">✕</button>
+    </div>`).join('');
+}
+
+function abrirModalTramo() { document.getElementById('modalTramo').classList.add('open'); }
+function cerrarModalTramo(e) { if(e.target===document.getElementById('modalTramo'))cerrarModalTramoBtn(); }
+function cerrarModalTramoBtn() {
+  document.getElementById('modalTramo').classList.remove('open');
+  ['tramo-desde','tramo-hasta','tramo-pct'].forEach(id=>document.getElementById(id).value='');
+}
+
+function agregarTramo() {
+  const desde = parseInt(document.getElementById('tramo-desde').value)||0;
+  const hasta = parseInt(document.getElementById('tramo-hasta').value)||0;
+  const pct   = parseFloat(document.getElementById('tramo-pct').value)||0;
+  if(!pct){ mostrarToast('⚠ Ingresá el % de comisión'); return; }
+  TRAMOS.push({desde,hasta,pct});
+  TRAMOS.sort((a,b)=>a.desde-b.desde);
+  renderTramos();
+  cerrarModalTramoBtn();
+  mostrarToast('✓ Tramo agregado');
+}
+
+function eliminarTramo(idx) {
+  TRAMOS.splice(idx,1);
+  renderTramos();
+}
+
+// ── CÁLCULO ──
+function calcularComision(v) {
+  let comisionBase = 0;
+  let bonos = 0;
+  let desglose = [];
+
+  if(esquemaActual === 'porcentaje') {
+    const pct = parseFloat(document.getElementById('pct-fijo').value)||8;
+    comisionBase = v.ventas * pct / 100;
+    desglose.push({label:`${pct}% sobre USD ${v.ventas.toLocaleString()}`,val:comisionBase});
+
+    const pctBono = parseFloat(document.getElementById('pct-bono').value)||80;
+    const bonoMeta = parseFloat(document.getElementById('bono-meta').value)||0;
+    if(v.metaAlcanzada >= pctBono && bonoMeta > 0) {
+      bonos += bonoMeta;
+      desglose.push({label:`Bono meta (${v.metaAlcanzada}% ≥ ${pctBono}%)`,val:bonoMeta});
+    }
+
+  } else if(esquemaActual === 'escalado') {
+    let ventasRestantes = v.ventas;
+    TRAMOS.forEach(t => {
+      const desde = t.desde;
+      const hasta = t.hasta || Infinity;
+      if(ventasRestantes <= 0 || v.ventas < desde) return;
+      const enTramo = Math.min(ventasRestantes, hasta - desde);
+      const comTramo = enTramo * t.pct / 100;
+      comisionBase += comTramo;
+      desglose.push({label:`USD ${desde}→${t.hasta||'∞'} al ${t.pct}%`,val:comTramo});
+      ventasRestantes -= enTramo;
+    });
+
+    const bonoSup = parseFloat(document.getElementById('bono-superacion').value)||0;
+    if(v.metaAlcanzada >= 100 && bonoSup > 0) {
+      bonos += bonoSup;
+      desglose.push({label:'Bono superación de meta',val:bonoSup});
+    }
+
+  } else { // mixto
+    const base = parseFloat(document.getElementById('sueldo-base').value)||0;
+    const pct  = parseFloat(document.getElementById('pct-mixto').value)||5;
+    const bonoCierre = parseFloat(document.getElementById('bono-cierre').value)||0;
+    const bonoMetaM  = parseFloat(document.getElementById('bono-meta-m').value)||0;
+
+    comisionBase = base + (v.ventas * pct / 100);
+    desglose.push({label:`Sueldo base`,val:base});
+    desglose.push({label:`${pct}% sobre USD ${v.ventas.toLocaleString()}`,val:v.ventas*pct/100});
+
+    if(bonoCierre > 0) {
+      const bc = v.cierres * bonoCierre;
+      bonos += bc;
+      desglose.push({label:`${v.cierres} cierres × USD ${bonoCierre}`,val:bc});
+    }
+    if(v.metaAlcanzada >= 80 && bonoMetaM > 0) {
+      bonos += bonoMetaM;
+      desglose.push({label:`Bono meta alcanzada`,val:bonoMetaM});
+    }
+  }
+
+  return { comisionBase, bonos, total: comisionBase + bonos, desglose };
+}
+
+function calcularComisiones() {
+  const resultados = VENDEDORES.map(v => ({ ...v, ...calcularComision(v) }));
+
+  // KPIs
+  const totalPagar = resultados.reduce((s,r)=>s+r.total,0);
+  const mayor = resultados.reduce((a,b)=>a.total>b.total?a:b);
+  const prom = totalPagar / resultados.length;
+  const totalVentas = VENDEDORES.reduce((s,v)=>s+v.ventas,0);
+  const ratioComision = Math.round(totalPagar/totalVentas*100);
+
+  document.getElementById('ks-total').textContent = 'USD '+Math.round(totalPagar).toLocaleString('es-AR');
+  document.getElementById('ks-mayor').textContent = 'USD '+Math.round(mayor.total).toLocaleString('es-AR');
+  document.getElementById('ks-mayor-quien').textContent = mayor.nombre;
+  document.getElementById('ks-prom').textContent = 'USD '+Math.round(prom).toLocaleString('es-AR');
+  document.getElementById('ks-ingresos').textContent = 'USD '+totalVentas.toLocaleString('es-AR');
+  document.getElementById('ks-ing-ratio').textContent = `${ratioComision}% del total`;
+  document.getElementById('ks-esquema').textContent =
+    esquemaActual==='porcentaje'?'% Fijo':esquemaActual==='escalado'?'Escalado':'Mixto';
+
+  // Cards resultados
+  document.getElementById('vend-results').innerHTML = resultados.map(r=>`
+    <div class="vr-card">
+      <div class="vr-top">
+        <div class="vr-avatar" style="background:${r.color}">${r.ini}</div>
+        <div>
+          <div class="vr-nombre">${r.nombre}</div>
+          <div class="vr-zona">📍 ${r.zona}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="vr-comision-big">USD ${Math.round(r.total).toLocaleString('es-AR')}</div>
+          <div class="vr-comision-label">comisión total</div>
+        </div>
+      </div>
+      <div class="vr-desglose">
+        <div class="vr-d-item">
+          <div class="vr-d-label">Ventas generadas</div>
+          <div class="vr-d-val" style="color:var(--cyan)">USD ${r.ventas.toLocaleString()}</div>
+          <div class="vr-d-sub">${r.cierres} cierres · ${r.metaAlcanzada}% meta</div>
+        </div>
+        <div class="vr-d-item">
+          <div class="vr-d-label">Comisión base</div>
+          <div class="vr-d-val" style="color:var(--azul-xl)">USD ${Math.round(r.comisionBase).toLocaleString()}</div>
+          <div class="vr-d-sub">Bonos: USD ${Math.round(r.bonos).toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="vr-tramos">
+        ${r.desglose.map(d=>`
+          <div class="vr-tramo-row">
+            <span class="vr-tramo-label">${d.label}</span>
+            <span class="vr-tramo-val" style="color:var(--verde)">USD ${Math.round(d.val).toLocaleString()}</span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  // Tabla resumen
+  document.getElementById('tabla-body').innerHTML = [
+    ...resultados.map(r=>`
+      <tr>
+        <td><strong>${r.nombre}</strong></td>
+        <td style="font-family:'DM Mono',monospace">USD ${r.ventas.toLocaleString()}</td>
+        <td style="font-family:'DM Mono',monospace;color:var(--azul-xl)">USD ${Math.round(r.comisionBase).toLocaleString()}</td>
+        <td style="font-family:'DM Mono',monospace;color:var(--naranja)">USD ${Math.round(r.bonos).toLocaleString()}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--verde)">USD ${Math.round(r.total).toLocaleString()}</td>
+      </tr>`),
+    `<tr>
+      <td>TOTAL</td>
+      <td style="font-family:'DM Mono',monospace">USD ${totalVentas.toLocaleString()}</td>
+      <td></td><td></td>
+      <td style="font-family:'Syne',sans-serif;font-weight:800;color:var(--verde);font-size:15px">USD ${Math.round(totalPagar).toLocaleString()}</td>
+    </tr>`
+  ].join('');
+
+  // Charts
+  renderCharts(resultados, totalPagar);
+  mostrarToast('✓ Comisiones calculadas correctamente');
+}
+
+function renderCharts(resultados, totalPagar) {
+  // Barras por vendedor
+  if(chartCom) chartCom.destroy();
+  chartCom = new Chart(document.getElementById('chartComisiones'),{
+    type:'bar',
+    data:{
+      labels: resultados.map(r=>r.nombre),
+      datasets:[
+        {label:'Comisión base',data:resultados.map(r=>Math.round(r.comisionBase)),backgroundColor:resultados.map(r=>r.color+'99'),borderColor:resultados.map(r=>r.color),borderWidth:1,borderRadius:4},
+        {label:'Bonos',data:resultados.map(r=>Math.round(r.bonos)),backgroundColor:'rgba(245,158,11,.5)',borderColor:'#F59E0B',borderWidth:1,borderRadius:4}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9CA3AF',font:{size:11},boxWidth:12}}},scales:{x:{stacked:false,ticks:{color:'#6B7280',font:{size:11}},grid:{color:'rgba(240,238,233,.04)'},border:{color:'transparent'}},y:{ticks:{color:'#6B7280',font:{size:11}},grid:{color:'rgba(240,238,233,.04)'},border:{color:'transparent'}}}}
+  });
+
+  // Evolución mensual
+  if(chartEvol) chartEvol.destroy();
+  const histData = [...HISTORIAL].reverse().map(h=>h.total);
+  histData.push(Math.round(totalPagar));
+  const histLabels = [...HISTORIAL].reverse().map(h=>h.mes.split(' ')[0]);
+  histLabels.push(MESES_LABELS[mesActual]);
+
+  chartEvol = new Chart(document.getElementById('chartEvolucion'),{
+    type:'line',
+    data:{
+      labels: histLabels,
+      datasets:[{
+        label:'Total comisiones',
+        data: histData,
+        borderColor:'#22C55E',
+        backgroundColor:'rgba(34,197,94,.1)',
+        tension:.4,fill:true,
+        pointBackgroundColor:'#22C55E',pointRadius:5
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6B7280',font:{size:11}},grid:{color:'rgba(240,238,233,.04)'},border:{color:'transparent'}},y:{ticks:{color:'#6B7280',font:{size:11}},grid:{color:'rgba(240,238,233,.04)'},border:{color:'transparent'}}}}
+  });
+}
+
+// ── HISTORIAL ──
+function renderHistorial() {
+  document.getElementById('hist-list').innerHTML = HISTORIAL.map(h=>`
+    <div class="hist-item">
+      <span class="hist-ico">💰</span>
+      <div class="hist-info">
+        <div class="hist-txt"><strong>${h.mes}</strong></div>
+        <div class="hist-txt">${h.detalle}</div>
+        <div class="hist-meta">
+          <span class="hist-monto">USD ${h.total.toLocaleString()}</span>
+          <span class="hist-tiempo">Liquidado</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── TOAST ──
+function mostrarToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+document.getElementById('mes-label').textContent = `${MESES_LABELS[mesActual]} ${anioActual}`;
+renderTramos();
+renderHistorial();
+document.getElementById('ks-esquema').textContent = '% Fijo';
+</script>
+</body>
+</html>
